@@ -33,12 +33,12 @@ jobs:
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
       - name: Build installable test APK
         working-directory: source
-        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:assembleStandardDebug
       - name: Verify APK
         run: |
-          APK=$(find source/app/build/outputs/apk/standard/debug -name "*.apk" -type f | head -1)
+          APK=$(find source/app/build/outputs/apk -name "*.apk" -type f | head -1)
           test -s "$APK"
-          apksigner verify --verbose --print-certs "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           cp "$APK" APK-Builder.apk
           sha256sum APK-Builder.apk > APK-Builder.apk.sha256
       - uses: softprops/action-gh-release@v2
