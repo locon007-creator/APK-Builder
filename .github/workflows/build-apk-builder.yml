@@ -31,12 +31,12 @@ jobs:
       - name: Test wizard and converter
         working-directory: source
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
-      - name: Build installable APK
+      - name: Build installable test APK
         working-directory: source
-        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardRelease
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
       - name: Verify APK
         run: |
-          APK=$(find source/app/build/outputs/apk/standard/release -name "*.apk" -type f | head -1)
+          APK=$(find source/app/build/outputs/apk/standard/debug -name "*.apk" -type f | head -1)
           test -s "$APK"
           apksigner verify --verbose --print-certs "$APK"
           cp "$APK" APK-Builder.apk
