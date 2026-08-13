@@ -13,8 +13,8 @@ index 5c32c102..303764f6 100644
          targetSdk = 28
 -        versionCode = 54
 -        versionName = "2.4.3"
-+        versionCode = 310
-+        versionName = "3.1.0"
++        versionCode = 311
++        versionName = "3.1.1"
          buildConfigField("boolean", "SHELL_RUNTIME_ONLY", "false")
  
          vectorDrawables {

@@ -1,4 +1,4 @@
-name: Build APK Builder 3.1
+name: Build APK Builder 3.1.1
 on:
   push:
     branches: [main]
@@ -33,19 +33,24 @@ jobs:
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
       - name: Build installable test APK
         working-directory: source
-        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:assembleStandardDebug
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
       - name: Verify APK
         run: |
           APK=$(find source/app/build/outputs/apk -name "*.apk" -type f | head -1)
           test -s "$APK"
+          TEMPLATE_ENTRY="assets/template/webview_shell.apk"
+          unzip -Z1 "$APK" | grep -Fx "$TEMPLATE_ENTRY"
+          unzip -p "$APK" "$TEMPLATE_ENTRY" > embedded-webview-shell.apk
+          test -s embedded-webview-shell.apk
+          unzip -tqq embedded-webview-shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           cp "$APK" APK-Builder.apk
           sha256sum APK-Builder.apk > APK-Builder.apk.sha256
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.1.0
-          name: APK Builder 3.1
-          body: "Complete guided APK Builder: HTML file, ZIP project, or website; app name; uploaded or locally generated icon; splash generated from the selected icon or uploaded; final confirmation; then automatic APK build. No paid API key required."
+          tag_name: v3.1.1
+          name: APK Builder 3.1.1
+          body: "Fixes APK builds failing at Loading template APK by embedding and validating the required WebView shell template. Includes the complete guided APK Builder wizard for HTML files, ZIP projects, and websites. No paid API key required."
           files: |
             APK-Builder.apk
             APK-Builder.apk.sha256
