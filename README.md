@@ -1,16 +1,13 @@
 # APK Builder
 
-A separate HTML-to-Android APK build system. This repository does not contain or modify StopScore.
+This repository publishes a working on-device HTML/web-project to Android APK converter.
 
-## Convert HTML to APK
-
-1. Open the `website` folder.
-2. Replace `index.html` and upload any CSS, JavaScript, images, or other assets beside it.
-3. Commit the files to `main`.
-4. GitHub Actions automatically validates the project, builds an installable APK, and publishes it.
-
-## Permanent download
+## Direct download
 
 https://github.com/locon007-creator/APK-Builder/releases/latest/download/APK-Builder.apk
 
-The Android package is signed with a development key for direct testing. A private production signing key is required before Play Store publication.
+## What was corrected
+
+The original 11 KB release was only an instruction screen and did not convert files. It has been replaced by the public-domain [WebToApp](https://github.com/shiaho777/web-to-app) conversion engine, which performs APK template patching and V1/V2/V3 signing directly on Android without a PC or remote build server.
+
+The release workflow pins version 2.4.3 and verifies its published SHA-256 checksum before publishing. The upstream project is released under The Unlicense; see its repository for source and licensing.
