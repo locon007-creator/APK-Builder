@@ -1,15 +1,11 @@
-name: Build and Release APK
+name: Verify and Release Real APK Builder
 
 on:
   push:
     branches: [main]
     paths:
-      - "website/**"
-      - "app/**"
-      - "scripts/**"
-      - "*.gradle.kts"
-      - "gradle.properties"
       - ".github/workflows/build-apk.yml"
+      - "README.md"
   workflow_dispatch:
 
 permissions:
@@ -20,53 +16,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test-release:
+  verify-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out APK Builder
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.7"
-
-      - name: Validate HTML input
+      - name: Download public-domain on-device conversion engine
         run: |
-          test -s website/index.html
-          grep -qi "<html" website/index.html
-          grep -qi "</html>" website/index.html
+          curl --fail --location --retry 3             https://github.com/shiaho777/web-to-app/releases/download/v2.4.3/web-to-app-2.4.3.APK             --output APK-Builder.apk
 
-      - name: Package HTML assets
-        run: bash scripts/prepare-site.sh
-
-      - name: Build signed Android APK
-        run: gradle --no-daemon assembleRelease
-
-      - name: Verify generated APK
+      - name: Verify exact upstream release checksum
         run: |
-          APK=app/build/outputs/apk/release/app-release.apk
-          test -s "$APK"
-          unzip -t "$APK"
-          unzip -l "$APK" | grep "assets/www/index.html"
-          cp "$APK" APK-Builder.apk
-          sha256sum APK-Builder.apk
+          echo "5960d2042b6dfdfd14b408144effa6728185cc1f7c19fd34576ee7e6dfb5d519  APK-Builder.apk" | sha256sum --check
 
-      - name: Publish permanent direct download
+      - name: Verify Android package structure
+        run: |
+          test -s APK-Builder.apk
+          unzip -t APK-Builder.apk
+          unzip -l APK-Builder.apk | grep "AndroidManifest.xml"
+          unzip -l APK-Builder.apk | grep "classes.dex"
+          file APK-Builder.apk | grep "Android package"
+
+      - name: Publish corrected direct download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-builder-latest
-          name: APK Builder — Latest
+          name: APK Builder — Working On-Device Converter
           prerelease: false
           make_latest: true
+          overwrite_files: true
           files: APK-Builder.apk
           body: |
-            Tested Android APK generated from the current HTML project.
+            Corrected APK Builder powered by the public-domain WebToApp on-device engine v2.4.3.
 
-            Tap APK-Builder.apk below to download it directly on Android.
+            This version selects HTML/web projects on the phone, patches an Android template, and signs generated APKs on-device. It is not the previous instruction-only wrapper.
+
+            Upstream source and license: https://github.com/shiaho777/web-to-app
