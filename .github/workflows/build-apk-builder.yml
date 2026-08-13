@@ -1,4 +1,4 @@
-name: Build APK Builder 3.0
+name: Build APK Builder 3.1
 on:
   push:
     branches: [main]
@@ -43,9 +43,9 @@ jobs:
           sha256sum APK-Builder.apk > APK-Builder.apk.sha256
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.0
-          name: APK Builder 3.0
-          body: "Guided APK Builder: HTML file, ZIP project, or website. No paid API key required. Uninstall an older build first because this edition has its own package identity."
+          tag_name: v3.1.0
+          name: APK Builder 3.1
+          body: "Complete guided APK Builder: HTML file, ZIP project, or website; app name; uploaded or locally generated icon; splash generated from the selected icon or uploaded; final confirmation; then automatic APK build. No paid API key required."
           files: |
             APK-Builder.apk
             APK-Builder.apk.sha256

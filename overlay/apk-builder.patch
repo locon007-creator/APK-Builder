@@ -1,5 +1,5 @@
 diff --git a/app/build.gradle.kts b/app/build.gradle.kts
-index 5c32c10..4eceaeb 100644
+index 5c32c102..303764f6 100644
 --- a/app/build.gradle.kts
 +++ b/app/build.gradle.kts
 @@ -53,12 +53,12 @@ android {
@@ -13,13 +13,81 @@ index 5c32c10..4eceaeb 100644
          targetSdk = 28
 -        versionCode = 54
 -        versionName = "2.4.3"
-+        versionCode = 300
-+        versionName = "3.0.0"
++        versionCode = 310
++        versionName = "3.1.0"
          buildConfigField("boolean", "SHELL_RUNTIME_ONLY", "false")
  
          vectorDrawables {
+diff --git a/app/src/main/java/com/webtoapp/core/i18n/ApkBuilderStrings.kt b/app/src/main/java/com/webtoapp/core/i18n/ApkBuilderStrings.kt
+new file mode 100644
+index 00000000..db630a58
+--- /dev/null
++++ b/app/src/main/java/com/webtoapp/core/i18n/ApkBuilderStrings.kt
+@@ -0,0 +1,62 @@
++package com.webtoapp.core.i18n
++
++/** APK Builder-only copy kept separate from the upstream product name and resources. */
++object ApkBuilderStrings {
++    private fun text(
++        zh: String,
++        en: String,
++        ar: String,
++        pt: String,
++        es: String,
++        fr: String,
++        de: String,
++        ru: String,
++        ja: String,
++        ko: String,
++    ): String = when (Strings.lang) {
++        AppLanguage.CHINESE -> zh
++        AppLanguage.ENGLISH -> en
++        AppLanguage.ARABIC -> ar
++        AppLanguage.PORTUGUESE -> pt
++        AppLanguage.SPANISH -> es
++        AppLanguage.FRENCH -> fr
++        AppLanguage.GERMAN -> de
++        AppLanguage.RUSSIAN -> ru
++        AppLanguage.JAPANESE -> ja
++        AppLanguage.KOREAN -> ko
++    }
++
++    val title get() = text("APK 构建器", "APK Builder", "منشئ APK", "Criador de APK", "Creador de APK", "Créateur d’APK", "APK-Builder", "Конструктор APK", "APK ビルダー", "APK 빌더")
++    val intro get() = text("通过简单步骤创建可安装的安卓应用。", "Create an installable Android app in a few guided steps.", "أنشئ تطبيق أندرويد قابلاً للتثبيت بخطوات موجهة.", "Crie um app Android instalável em etapas guiadas.", "Crea una app Android instalable en pasos guiados.", "Créez une application Android installable en quelques étapes.", "Erstelle eine installierbare Android-App in wenigen Schritten.", "Создайте устанавливаемое Android-приложение за несколько шагов.", "ガイド付きの手順でインストール可能な Android アプリを作成します。", "안내 단계에 따라 설치 가능한 Android 앱을 만드세요.")
++    val sourceTitle get() = text("选择来源", "Choose your source", "اختر المصدر", "Escolha a origem", "Elige el origen", "Choisissez la source", "Quelle auswählen", "Выберите источник", "ソースを選択", "소스 선택")
++    val htmlFile get() = text("HTML 文件", "HTML file", "ملف HTML", "Arquivo HTML", "Archivo HTML", "Fichier HTML", "HTML-Datei", "HTML-файл", "HTML ファイル", "HTML 파일")
++    val htmlHint get() = text("选择单个 .html 或 .htm 文件", "Choose one .html or .htm file", "اختر ملف .html أو .htm", "Escolha um arquivo .html ou .htm", "Elige un archivo .html o .htm", "Choisissez un fichier .html ou .htm", "Eine .html- oder .htm-Datei wählen", "Выберите файл .html или .htm", ".html または .htm を選択", ".html 또는 .htm 파일 선택")
++    val zipProject get() = text("ZIP 项目", "ZIP project", "مشروع ZIP", "Projeto ZIP", "Proyecto ZIP", "Projet ZIP", "ZIP-Projekt", "ZIP-проект", "ZIP プロジェクト", "ZIP 프로젝트")
++    val zipHint get() = text("选择完整的 HTML/CSS/JS 项目", "Choose a complete HTML/CSS/JS project", "اختر مشروع HTML/CSS/JS كاملاً", "Escolha um projeto HTML/CSS/JS completo", "Elige un proyecto HTML/CSS/JS completo", "Choisissez un projet HTML/CSS/JS complet", "Ein vollständiges HTML/CSS/JS-Projekt wählen", "Выберите полный проект HTML/CSS/JS", "完全な HTML/CSS/JS プロジェクトを選択", "완전한 HTML/CSS/JS 프로젝트 선택")
++    val website get() = text("网站", "Website", "موقع ويب", "Site", "Sitio web", "Site web", "Website", "Веб-сайт", "ウェブサイト", "웹사이트")
++    val websiteHint get() = text("输入公开的 http 或 https 地址", "Enter a public http or https address", "أدخل عنوان http أو https عاماً", "Digite um endereço http ou https público", "Ingresa una dirección http o https pública", "Saisissez une adresse http ou https publique", "Öffentliche http- oder https-Adresse eingeben", "Введите публичный адрес http или https", "公開 http または https アドレスを入力", "공개 http 또는 https 주소 입력")
++    val selectFile get() = text("选择文件", "Choose file", "اختر ملفاً", "Escolher arquivo", "Elegir archivo", "Choisir un fichier", "Datei wählen", "Выбрать файл", "ファイルを選択", "파일 선택")
++    val selectZip get() = text("选择 ZIP", "Choose ZIP", "اختر ZIP", "Escolher ZIP", "Elegir ZIP", "Choisir le ZIP", "ZIP wählen", "Выбрать ZIP", "ZIP を選択", "ZIP 선택")
++    val urlLabel get() = text("网站地址", "Website URL", "رابط الموقع", "URL do site", "URL del sitio", "URL du site", "Website-URL", "URL сайта", "ウェブサイト URL", "웹사이트 URL")
++    val identityTitle get() = text("应用名称和图标", "App name and icon", "اسم التطبيق والأيقونة", "Nome e ícone", "Nombre e icono", "Nom et icône", "App-Name und Symbol", "Название и значок", "アプリ名とアイコン", "앱 이름 및 아이콘")
++    val appName get() = text("应用名称", "App name", "اسم التطبيق", "Nome do app", "Nombre de la app", "Nom de l’application", "App-Name", "Название приложения", "アプリ名", "앱 이름")
++    val uploadIcon get() = text("上传图标", "Upload icon", "رفع أيقونة", "Enviar ícone", "Subir icono", "Importer une icône", "Symbol hochladen", "Загрузить значок", "アイコンをアップロード", "아이콘 업로드")
++    val generateIcon get() = text("本地生成图标", "Generate icon locally", "إنشاء الأيقونة محلياً", "Gerar ícone localmente", "Generar icono localmente", "Générer l’icône localement", "Symbol lokal erzeugen", "Создать значок локально", "端末でアイコンを生成", "기기에서 아이콘 생성")
++    val splashTitle get() = text("启动画面", "Splash screen", "شاشة البداية", "Tela de abertura", "Pantalla de inicio", "Écran de démarrage", "Startbild", "Экран запуска", "スプラッシュ画面", "시작 화면")
++    val splashHint get() = text("使用已选图标生成，或上传自己的图片。", "Generate it from the selected icon, or upload your own image.", "أنشئها من الأيقونة المختارة أو ارفع صورتك.", "Gere a partir do ícone ou envie sua imagem.", "Genérala desde el icono o sube tu imagen.", "Générez-la depuis l’icône ou importez votre image.", "Aus dem Symbol erzeugen oder eigenes Bild hochladen.", "Создайте из значка или загрузите изображение.", "選択したアイコンから生成するか、画像をアップロードします。", "선택한 아이콘으로 생성하거나 이미지를 업로드하세요.")
++    val uploadSplash get() = text("上传启动图", "Upload splash", "رفع شاشة البداية", "Enviar abertura", "Subir inicio", "Importer l’écran", "Startbild hochladen", "Загрузить экран", "画像をアップロード", "시작 이미지 업로드")
++    val generateSplash get() = text("从图标生成", "Generate from icon", "إنشاء من الأيقونة", "Gerar do ícone", "Generar desde el icono", "Générer depuis l’icône", "Aus Symbol erzeugen", "Создать из значка", "アイコンから生成", "아이콘으로 생성")
++    val confirmTitle get() = text("最终确认", "Final confirmation", "التأكيد النهائي", "Confirmação final", "Confirmación final", "Confirmation finale", "Endgültige Bestätigung", "Итоговое подтверждение", "最終確認", "최종 확인")
++    val sourceLabel get() = text("来源", "Source", "المصدر", "Origem", "Origen", "Source", "Quelle", "Источник", "ソース", "소스")
++    val iconReady get() = text("图标已就绪", "Icon ready", "الأيقونة جاهزة", "Ícone pronto", "Icono listo", "Icône prête", "Symbol bereit", "Значок готов", "アイコン準備完了", "아이콘 준비됨")
++    val splashReady get() = text("启动画面已就绪", "Splash ready", "شاشة البداية جاهزة", "Abertura pronta", "Inicio listo", "Écran prêt", "Startbild bereit", "Экран готов", "スプラッシュ準備完了", "시작 화면 준비됨")
++    val continueLabel get() = text("继续", "Continue", "متابعة", "Continuar", "Continuar", "Continuer", "Weiter", "Продолжить", "続ける", "계속")
++    val confirmBuild get() = text("确认并构建 APK", "Confirm & build APK", "تأكيد وإنشاء APK", "Confirmar e criar APK", "Confirmar y crear APK", "Confirmer et créer l’APK", "Bestätigen und APK bauen", "Подтвердить и собрать APK", "確認して APK をビルド", "확인 후 APK 빌드")
++    val creating get() = text("正在创建项目…", "Creating project…", "جارٍ إنشاء المشروع…", "Criando projeto…", "Creando proyecto…", "Création du projet…", "Projekt wird erstellt…", "Создание проекта…", "プロジェクトを作成中…", "프로젝트 생성 중…")
++    val projects get() = text("我的项目", "My projects", "مشاريعي", "Meus projetos", "Mis proyectos", "Mes projets", "Meine Projekte", "Мои проекты", "マイプロジェクト", "내 프로젝트")
++    val invalidWebsite get() = text("请输入有效的 http 或 https 地址。", "Enter a valid http or https address.", "أدخل عنوان http أو https صالحاً.", "Digite um endereço http ou https válido.", "Ingresa una dirección http o https válida.", "Saisissez une adresse http ou https valide.", "Gültige http- oder https-Adresse eingeben.", "Введите корректный адрес http или https.", "有効な http または https アドレスを入力してください。", "올바른 http 또는 https 주소를 입력하세요.")
++    val missingHtml get() = text("所选文件不是可读的 HTML 文件。", "The selected file is not a readable HTML file.", "الملف المحدد ليس ملف HTML قابلاً للقراءة.", "O arquivo não é um HTML legível.", "El archivo no es un HTML legible.", "Le fichier n’est pas un HTML lisible.", "Die Datei ist keine lesbare HTML-Datei.", "Выбранный файл не является читаемым HTML.", "選択したファイルは読み取り可能な HTML ではありません。", "선택한 파일은 읽을 수 있는 HTML 파일이 아닙니다.")
++    val missingZipHtml get() = text("ZIP 中未找到 HTML 文件。", "No HTML file was found in the ZIP project.", "لم يتم العثور على HTML في مشروع ZIP.", "Nenhum HTML foi encontrado no ZIP.", "No se encontró HTML en el ZIP.", "Aucun HTML trouvé dans le ZIP.", "Keine HTML-Datei im ZIP gefunden.", "В ZIP не найден HTML-файл.", "ZIP に HTML ファイルがありません。", "ZIP에서 HTML 파일을 찾지 못했습니다.")
++    val artworkFailed get() = text("无法创建图片，请重试。", "Could not create the image. Try again.", "تعذر إنشاء الصورة. حاول مجدداً.", "Não foi possível criar a imagem.", "No se pudo crear la imagen.", "Impossible de créer l’image.", "Bild konnte nicht erstellt werden.", "Не удалось создать изображение.", "画像を作成できませんでした。", "이미지를 만들 수 없습니다.")
++    val createFailed get() = text("无法创建项目，请检查选择后重试。", "Could not create the project. Check your choices and try again.", "تعذر إنشاء المشروع. تحقق وحاول مجدداً.", "Não foi possível criar o projeto.", "No se pudo crear el proyecto.", "Impossible de créer le projet.", "Projekt konnte nicht erstellt werden.", "Не удалось создать проект.", "プロジェクトを作成できませんでした。", "프로젝트를 생성할 수 없습니다.")
++}
 diff --git a/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt b/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
-index 04b790c..86078e3 100644
+index 04b790c6..6888af84 100644
 --- a/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
 +++ b/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
 @@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
@@ -30,7 +98,23 @@ index 04b790c..86078e3 100644
      const val HOME = "home"
      const val MORE = "more"
  
-@@ -137,13 +138,24 @@ fun AppNavigation() {
+@@ -103,6 +104,7 @@ object Routes {
+     const val PLAY_STORE = "play_store?appId={appId}&autoStart={autoStart}"
+     const val FILE_MANAGER = "file_manager"
+     const val BUILD_APK = "build_apk/{appId}"
++    const val BUILD_APK_AUTO = "build_apk_auto/{appId}"
+ 
+     fun playStore(appId: Long? = null, autoStart: Boolean = false): String {
+         val id = appId?.toString() ?: ""
+@@ -110,6 +112,7 @@ object Routes {
+     }
+ 
+     fun buildApk(appId: Long) = "build_apk/$appId"
++    fun buildApkAuto(appId: Long) = "build_apk_auto/$appId"
+ 
+     fun editApp(appId: Long) = "edit_app/$appId"
+     fun editWebApp(appId: Long) = "edit_web_app/$appId"
+@@ -137,13 +140,20 @@ fun AppNavigation() {
      Box(modifier = Modifier.fillMaxSize()) {
          NavHost(
              navController = navController,
@@ -43,59 +127,310 @@ index 04b790c..86078e3 100644
              popExitTransition = com.webtoapp.ui.animation.pagePopExitTransition
          ) {
 +            composable(Routes.APK_BUILDER) {
-+                com.webtoapp.ui.wizard.ApkBuilderStartScreen(
-+                    onWebsite = {
-+                        viewModel.createNewApp()
-+                        navController.navigate(Routes.CREATE_APP)
-+                    },
-+                    onHtml = { navController.navigate(Routes.CREATE_HTML_APP) },
-+                    onZip = { navController.navigate(Routes.CREATE_HTML_APP) },
++                com.webtoapp.ui.wizard.ApkBuilderWizardScreen(
++                    viewModel = viewModel,
 +                    onProjects = { navController.navigate(Routes.HOME) },
++                    onBuild = { appId -> navController.navigate(Routes.buildApkAuto(appId)) },
 +                )
 +            }
              composable(Routes.HOME) {
                  HomeScreen(
                      viewModel = viewModel,
+@@ -727,6 +737,21 @@ fun AppNavigation() {
+                 )
+             }
+ 
++            composable(
++                route = Routes.BUILD_APK_AUTO,
++                arguments = listOf(navArgument("appId") { type = NavType.LongType })
++            ) { backStackEntry ->
++                val appId = backStackEntry.arguments?.getLong("appId") ?: 0L
++                BuildApkScreen(
++                    appId = appId,
++                    onBack = { navController.navigate(Routes.APK_BUILDER) },
++                    onExportAab = { id ->
++                        navController.navigate(Routes.playStore(appId = id, autoStart = true))
++                    },
++                    autoStart = true
++                )
++            }
++
+             composable(Routes.ABOUT) {
+                 AboutScreen(onBack = { navController.popBackStack() })
+             }
+diff --git a/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt b/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
+index 8f7b9073..d517e104 100644
+--- a/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
++++ b/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
+@@ -97,7 +97,8 @@ import kotlinx.coroutines.withContext
+ fun BuildApkScreen(
+     appId: Long,
+     onBack: () -> Unit,
+-    onExportAab: (Long) -> Unit = {}
++    onExportAab: (Long) -> Unit = {},
++    autoStart: Boolean = false
+ ) {
+     val repository = remember { WebToAppApplication.repository }
+     val webApp by repository.getWebAppById(appId).collectAsState(initial = null)
+@@ -119,7 +120,8 @@ fun BuildApkScreen(
+     BuildApkContent(
+         webApp = app,
+         onBack = onBack,
+-        onExportAab = { onExportAab(app.id) }
++        onExportAab = { onExportAab(app.id) },
++        autoStart = autoStart
+     )
+ }
+ 
+@@ -127,7 +129,8 @@ fun BuildApkScreen(
+ private fun BuildApkContent(
+     webApp: WebApp,
+     onBack: () -> Unit,
+-    onExportAab: () -> Unit
++    onExportAab: () -> Unit,
++    autoStart: Boolean = false
+ ) {
+     val context = LocalContext.current
+     val scope = rememberCoroutineScope()
+@@ -299,6 +302,14 @@ private fun BuildApkContent(
+         }
+     }
+ 
++    var autoStartConsumed by remember(webApp.id) { mutableStateOf(false) }
++    LaunchedEffect(autoStart, apkBuilderState) {
++        if (autoStart && !autoStartConsumed && apkBuilderState != null) {
++            autoStartConsumed = true
++            launchBuild()
++        }
++    }
++
+     LaunchedEffect(
+         webApp,
+         encryptionConfig,
+diff --git a/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt b/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
+index 9dfb0420..57470d99 100644
+--- a/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
++++ b/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
+@@ -413,7 +413,7 @@ class MainViewModel(
+         }
+     }
+ 
+-    fun saveApp() {
++    fun saveApp(onSaved: (Long) -> Unit = {}) {
+         viewModelScope.launch {
+             var state = _editState.value
+ 
+@@ -434,8 +434,9 @@ class MainViewModel(
+                 AppLogger.d("MainViewModel", "saveApp: activationEnabled=${state.activationEnabled}, " +
+                     "activationCodeList.size=${state.activationCodeList.size}")
+ 
+-                if (_currentApp.value != null) {
++                val savedAppId = if (_currentApp.value != null) {
+                     repository.updateWebApp(webApp)
++                    webApp.id
+                 } else {
+                     val newId = repository.createWebApp(webApp)
+ 
+@@ -447,10 +448,12 @@ class MainViewModel(
+                         )
+                         repository.updateWebApp(webApp.copy(id = newId, webViewConfig = reExternalized))
+                     }
++                    newId
+                 }
+ 
+                 _uiState.value = UiState.Success(Strings.appSavedSuccessfully)
+                 resetEditState()
++                if (savedAppId > 0) onSaved(savedAppId)
+             } catch (e: Exception) {
+                 _uiState.value = UiState.Error(e.message ?: Strings.saveFailed)
+             }
+@@ -651,20 +654,25 @@ class MainViewModel(
+     private fun createApp(
+         typeName: String,
+         iconUri: Uri?,
++        savedIconPathOverride: String? = null,
++        onCreated: (Long) -> Unit = {},
+         buildApp: suspend (savedIconPath: String?, currentThemeType: String, categoryId: Long?) -> WebApp?
+     ) {
+         viewModelScope.launch {
+             _uiState.value = UiState.Loading
+             try {
+                 val currentThemeType = getCurrentThemeType()
+-                val savedIconPath = saveIconIfPresent(iconUri)
++                val savedIconPath = savedIconPathOverride ?: saveIconIfPresent(iconUri)
+                 val categoryId = _selectedCategoryId.value?.takeIf { it > 0 }
+ 
+                 val webApp = buildApp(savedIconPath, currentThemeType, categoryId)
+                     ?: return@launch
+ 
+-                withContext(Dispatchers.IO) { repository.createWebApp(webApp) }
++                val appId = withContext(Dispatchers.IO) { repository.createWebApp(webApp) }
++                if (appId <= 0) throw IllegalStateException("Project was not created")
++                _currentApp.value = webApp.copy(id = appId)
+                 _uiState.value = UiState.Success(Strings.appCreatedSuccessfully.replaceFirst("%s", typeName))
++                onCreated(appId)
+             } catch (e: Exception) {
+                 AppLogger.e("MainViewModel", "Failed to save $typeName app", e)
+                 _uiState.value = UiState.Error(Strings.creationFailed.replaceFirst("%s", e.message ?: ""))
+@@ -779,8 +787,16 @@ class MainViewModel(
+         name: String,
+         htmlConfig: HtmlConfig?,
+         iconUri: Uri?,
+-        themeType: String = "AURORA"
+-    ) = createApp("HTML", iconUri) { savedIconPath, currentThemeType, categoryId ->
++        themeType: String = "AURORA",
++        iconPath: String? = null,
++        splashPath: String? = null,
++        onCreated: (Long) -> Unit = {}
++    ) = createApp(
++        typeName = "HTML",
++        iconUri = iconUri,
++        savedIconPathOverride = iconPath,
++        onCreated = onCreated,
++    ) { savedIconPath, currentThemeType, categoryId ->
+         val context = getApplication<Application>()
+         val projectId = HtmlStorage.generateProjectId()
+         val savedHtmlFiles = processAndSaveHtmlFiles(context, htmlConfig?.files ?: emptyList(), projectId)
+@@ -809,6 +825,8 @@ class MainViewModel(
+             activationCodeList = emptyList(),
+             bgmEnabled = false,
+             bgmConfig = BgmConfig(),
++            splashEnabled = !splashPath.isNullOrBlank(),
++            splashConfig = splashPath?.let { SplashConfig(mediaPath = it) },
+             themeType = currentThemeType,
+             categoryId = categoryId
+         )
+@@ -823,8 +841,16 @@ class MainViewModel(
+         enableLocalStorage: Boolean = true,
+         loadMode: HtmlLoadMode = HtmlLoadMode.FILE,
+         port: Int = 0,
+-        portConflictMode: com.webtoapp.data.model.PortConflictMode = com.webtoapp.data.model.PortConflictMode.AUTO_KILL
+-    ) = createApp("HTML", iconUri) { savedIconPath, currentThemeType, categoryId ->
++        portConflictMode: com.webtoapp.data.model.PortConflictMode = com.webtoapp.data.model.PortConflictMode.AUTO_KILL,
++        iconPath: String? = null,
++        splashPath: String? = null,
++        onCreated: (Long) -> Unit = {}
++    ) = createApp(
++        typeName = "HTML",
++        iconUri = iconUri,
++        savedIconPathOverride = iconPath,
++        onCreated = onCreated,
++    ) { savedIconPath, currentThemeType, categoryId ->
+         val context = getApplication<Application>()
+         val projectId = HtmlStorage.generateProjectId()
+         val savedFiles = copyBuildOutputToStorage(context, extractedDir, projectId)
+@@ -858,6 +884,8 @@ class MainViewModel(
+             activationCodeList = emptyList(),
+             bgmEnabled = false,
+             bgmConfig = BgmConfig(),
++            splashEnabled = !splashPath.isNullOrBlank(),
++            splashConfig = splashPath?.let { SplashConfig(mediaPath = it) },
+             themeType = currentThemeType,
+             categoryId = categoryId
+         )
 diff --git a/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
 new file mode 100644
-index 0000000..303991c
+index 00000000..129e4026
 --- /dev/null
 +++ b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,578 @@
 +package com.webtoapp.ui.wizard
 +
++import android.content.Context
++import android.graphics.Bitmap
++import android.graphics.BitmapFactory
++import android.graphics.Canvas
++import android.graphics.Color
++import android.graphics.LinearGradient
++import android.graphics.Paint
++import android.graphics.Rect
++import android.graphics.RectF
++import android.graphics.Shader
++import android.graphics.Typeface
++import android.net.Uri
++import android.provider.OpenableColumns
++import androidx.activity.compose.rememberLauncherForActivityResult
++import androidx.activity.result.contract.ActivityResultContracts
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
 +import androidx.compose.foundation.clickable
-+import androidx.compose.foundation.layout.Arrangement
-+import androidx.compose.foundation.layout.Column
-+import androidx.compose.foundation.layout.Row
-+import androidx.compose.foundation.layout.Spacer
-+import androidx.compose.foundation.layout.fillMaxSize
-+import androidx.compose.foundation.layout.fillMaxWidth
-+import androidx.compose.foundation.layout.height
-+import androidx.compose.foundation.layout.padding
-+import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.rememberScrollState
 +import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.foundation.verticalScroll
 +import androidx.compose.material.icons.Icons
-+import androidx.compose.material.icons.outlined.Code
-+import androidx.compose.material.icons.outlined.FolderZip
-+import androidx.compose.material.icons.outlined.Language
-+import androidx.compose.material3.Button
-+import androidx.compose.material3.Card
-+import androidx.compose.material3.CardDefaults
-+import androidx.compose.material3.Icon
-+import androidx.compose.material3.MaterialTheme
-+import androidx.compose.material3.OutlinedButton
-+import androidx.compose.material3.Text
-+import androidx.compose.runtime.Composable
++import androidx.compose.material.icons.automirrored.outlined.ArrowBack
++import androidx.compose.material.icons.outlined.*
++import androidx.compose.material3.*
++import androidx.compose.runtime.*
 +import androidx.compose.ui.Alignment
 +import androidx.compose.ui.Modifier
 +import androidx.compose.ui.graphics.vector.ImageVector
++import androidx.compose.ui.layout.ContentScale
++import androidx.compose.ui.platform.LocalContext
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextAlign
++import androidx.compose.ui.text.style.TextOverflow
 +import androidx.compose.ui.unit.dp
++import androidx.lifecycle.compose.collectAsStateWithLifecycle
++import coil.compose.AsyncImage
++import com.webtoapp.core.i18n.ApkBuilderStrings
++import com.webtoapp.data.model.*
++import com.webtoapp.ui.viewmodel.MainViewModel
++import com.webtoapp.ui.viewmodel.UiState
++import com.webtoapp.util.IconStorage
++import com.webtoapp.util.SplashStorage
++import com.webtoapp.util.ZipProjectImporter
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++import java.io.File
++import java.io.FileOutputStream
++import java.net.URI
++import java.util.UUID
 +import kotlin.math.absoluteValue
 +
 +enum class WizardSource { WEBSITE, HTML_FILE, ZIP_PROJECT }
 +
-+/** Rules shared by the free on-device icon and splash generators. */
++enum class WizardStep { SOURCE, IDENTITY, SPLASH, CONFIRM, CREATING }
++
++object WizardRules {
++    fun isValidWebsite(value: String): Boolean = try {
++        val uri = URI(value.trim())
++        uri.scheme in setOf("http", "https") && !uri.host.isNullOrBlank()
++    } catch (_: Exception) {
++        false
++    }
++
++    fun canContinue(
++        step: WizardStep,
++        sourceReady: Boolean,
++        appName: String,
++        hasIcon: Boolean,
++        hasSplash: Boolean,
++    ): Boolean = when (step) {
++        WizardStep.SOURCE -> sourceReady
++        WizardStep.IDENTITY -> appName.isNotBlank() && hasIcon
++        WizardStep.SPLASH -> hasIcon && hasSplash
++        WizardStep.CONFIRM -> sourceReady && appName.isNotBlank() && hasIcon && hasSplash
++        WizardStep.CREATING -> false
++    }
++
++    fun next(step: WizardStep): WizardStep = when (step) {
++        WizardStep.SOURCE -> WizardStep.IDENTITY
++        WizardStep.IDENTITY -> WizardStep.SPLASH
++        WizardStep.SPLASH -> WizardStep.CONFIRM
++        WizardStep.CONFIRM, WizardStep.CREATING -> WizardStep.CREATING
++    }
++
++    fun previous(step: WizardStep): WizardStep = when (step) {
++        WizardStep.SOURCE, WizardStep.IDENTITY -> WizardStep.SOURCE
++        WizardStep.SPLASH -> WizardStep.IDENTITY
++        WizardStep.CONFIRM, WizardStep.CREATING -> WizardStep.SPLASH
++    }
++}
++
++/** Deterministic, free on-device icon and splash generation. */
 +object LocalArtwork {
 +    val palettes = listOf(
 +        0xFF5B4BDBL to 0xFF2D1F8FL,
@@ -112,67 +447,473 @@ index 0000000..303991c
 +        else "${words.first().first()}${words.last().first()}".uppercase()
 +    }
 +
-+    fun paletteIndex(appName: String): Int = appName.hashCode().absoluteValue % palettes.size
-+}
++    fun paletteIndex(appName: String): Int =
++        (appName.hashCode().toLong().absoluteValue % palettes.size).toInt()
 +
-+@Composable
-+fun ApkBuilderStartScreen(
-+    onWebsite: () -> Unit,
-+    onHtml: () -> Unit,
-+    onZip: () -> Unit,
-+    onProjects: () -> Unit,
-+) {
-+    Column(
-+        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 28.dp),
-+        verticalArrangement = Arrangement.Center,
-+    ) {
-+        Text("APK Builder", style = MaterialTheme.typography.headlineLarge)
-+        Spacer(Modifier.height(8.dp))
-+        Text(
-+            "Create a real Android APK in a guided flow. Choose what you already have.",
-+            style = MaterialTheme.typography.bodyLarge,
-+            color = MaterialTheme.colorScheme.onSurfaceVariant,
-+        )
-+        Spacer(Modifier.height(24.dp))
-+        SourceCard(Icons.Outlined.Code, "HTML file", "Upload an .html file and its assets", onHtml)
-+        Spacer(Modifier.height(12.dp))
-+        SourceCard(Icons.Outlined.FolderZip, "ZIP project", "Upload a complete HTML/CSS/JS project", onZip)
-+        Spacer(Modifier.height(12.dp))
-+        SourceCard(Icons.Outlined.Language, "Website", "Enter a public website address", onWebsite)
-+        Spacer(Modifier.height(24.dp))
-+        Button(onClick = onHtml, modifier = Modifier.fillMaxWidth()) { Text("Start with HTML") }
-+        Spacer(Modifier.height(10.dp))
-+        OutlinedButton(onClick = onProjects, modifier = Modifier.fillMaxWidth()) { Text("My projects") }
-+        Spacer(Modifier.height(18.dp))
-+        Text(
-+            "Next: app name → free icon or upload → splash from icon or upload → options → confirmation → Create APK",
-+            style = MaterialTheme.typography.bodySmall,
-+            color = MaterialTheme.colorScheme.onSurfaceVariant,
-+        )
++    fun generateIcon(context: Context, appName: String): String? = try {
++        val (start, end) = palettes[paletteIndex(appName)]
++        val bitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
++        val canvas = Canvas(bitmap)
++        val background = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++            shader = LinearGradient(0f, 0f, 512f, 512f, start.toInt(), end.toInt(), Shader.TileMode.CLAMP)
++        }
++        canvas.drawRoundRect(RectF(0f, 0f, 512f, 512f), 112f, 112f, background)
++        val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(42, 255, 255, 255) }
++        canvas.drawCircle(256f, 238f, 158f, halo)
++        val text = initials(appName)
++        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++            color = Color.WHITE
++            textAlign = Paint.Align.CENTER
++            textSize = if (text.length == 1) 226f else 176f
++            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
++        }
++        val baseline = 256f - (textPaint.descent() + textPaint.ascent()) / 2f
++        canvas.drawText(text, 256f, baseline, textPaint)
++        IconStorage.saveIconFromBitmap(context, bitmap).also { bitmap.recycle() }
++    } catch (_: Exception) {
++        null
++    }
++
++    fun generateSplash(context: Context, appName: String, iconPath: String): String? = try {
++        val icon = BitmapFactory.decodeFile(iconPath) ?: return null
++        val (start, end) = palettes[paletteIndex(appName)]
++        val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
++        val canvas = Canvas(bitmap)
++        val background = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++            shader = LinearGradient(0f, 0f, 1080f, 1920f, end.toInt(), Color.rgb(8, 9, 14), Shader.TileMode.CLAMP)
++        }
++        canvas.drawRect(0f, 0f, 1080f, 1920f, background)
++        val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++            color = Color.argb(50, Color.red(start.toInt()), Color.green(start.toInt()), Color.blue(start.toInt()))
++        }
++        canvas.drawCircle(540f, 820f, 330f, glow)
++        canvas.drawBitmap(icon, null, Rect(360, 640, 720, 1000), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
++        val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++            color = Color.WHITE
++            textAlign = Paint.Align.CENTER
++            textSize = 68f
++            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
++        }
++        canvas.drawText(appName, 540f, 1125f, titlePaint)
++        val directory = File(context.filesDir, "splash_media").apply { mkdirs() }
++        val file = File(directory, "splash_${UUID.randomUUID()}.png")
++        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 92, it) }
++        icon.recycle()
++        bitmap.recycle()
++        file.absolutePath
++    } catch (_: Exception) {
++        null
 +    }
 +}
 +
++@OptIn(ExperimentalMaterial3Api::class)
 +@Composable
-+private fun SourceCard(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-+    Card(
-+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-+        shape = RoundedCornerShape(18.dp),
-+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-+    ) {
-+        Row(
-+            modifier = Modifier.fillMaxWidth().padding(18.dp),
-+            verticalAlignment = Alignment.CenterVertically,
-+        ) {
-+            Icon(icon, contentDescription = null, modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
-+            Column(Modifier.padding(start = 16.dp)) {
-+                Text(title, style = MaterialTheme.typography.titleMedium)
-+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
++fun ApkBuilderWizardScreen(
++    viewModel: MainViewModel,
++    onProjects: () -> Unit,
++    onBuild: (Long) -> Unit,
++) {
++    val context = LocalContext.current
++    val scope = rememberCoroutineScope()
++    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
++
++    var step by remember { mutableStateOf(WizardStep.SOURCE) }
++    var source by remember { mutableStateOf<WizardSource?>(null) }
++    var websiteUrl by remember { mutableStateOf("") }
++    var htmlFile by remember { mutableStateOf<HtmlFile?>(null) }
++    var zipAnalysis by remember { mutableStateOf<ZipProjectImporter.ZipProjectAnalysis?>(null) }
++    var appName by remember { mutableStateOf("") }
++    var iconPath by remember { mutableStateOf<String?>(null) }
++    var splashPath by remember { mutableStateOf<String?>(null) }
++    var errorMessage by remember { mutableStateOf<String?>(null) }
++    var isBusy by remember { mutableStateOf(false) }
++
++    val htmlPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
++        if (uri != null) scope.launch {
++            isBusy = true
++            val selected = withContext(Dispatchers.IO) { copyHtmlToCache(context, uri) }
++            isBusy = false
++            if (selected == null) errorMessage = ApkBuilderStrings.missingHtml
++            else {
++                htmlFile = selected
++                zipAnalysis = null
++                source = WizardSource.HTML_FILE
++                if (appName.isBlank()) appName = selected.name.substringBeforeLast('.')
++                errorMessage = null
 +            }
 +        }
 +    }
++
++    val zipPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
++        if (uri != null) scope.launch {
++            isBusy = true
++            try {
++                val selected = withContext(Dispatchers.IO) { ZipProjectImporter.importZip(context, uri) }
++                if (selected.htmlFiles.isEmpty()) errorMessage = ApkBuilderStrings.missingZipHtml
++                else {
++                    zipAnalysis = selected
++                    htmlFile = null
++                    source = WizardSource.ZIP_PROJECT
++                    if (appName.isBlank()) appName = selected.suggestedAppName
++                    errorMessage = null
++                }
++            } catch (_: Exception) {
++                errorMessage = ApkBuilderStrings.missingZipHtml
++            } finally {
++                isBusy = false
++            }
++        }
++    }
++
++    val iconPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
++        if (uri != null) scope.launch {
++            isBusy = true
++            val selected = withContext(Dispatchers.IO) { IconStorage.saveIconFromUri(context, uri) }
++            isBusy = false
++            if (selected == null) errorMessage = ApkBuilderStrings.artworkFailed
++            else {
++                iconPath = selected
++                splashPath = null
++                errorMessage = null
++            }
++        }
++    }
++
++    val splashPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
++        if (uri != null) scope.launch {
++            isBusy = true
++            val selected = withContext(Dispatchers.IO) { SplashStorage.saveMediaFromUri(context, uri, false) }
++            isBusy = false
++            if (selected == null) errorMessage = ApkBuilderStrings.artworkFailed
++            else {
++                splashPath = selected
++                errorMessage = null
++            }
++        }
++    }
++
++    val sourceReady = when (source) {
++        WizardSource.WEBSITE -> WizardRules.isValidWebsite(websiteUrl)
++        WizardSource.HTML_FILE -> htmlFile?.let { File(it.path).canRead() && File(it.path).length() > 0L } == true
++        WizardSource.ZIP_PROJECT -> zipAnalysis?.htmlFiles?.isNotEmpty() == true
++        null -> false
++    }
++
++    LaunchedEffect(uiState) {
++        if (uiState is UiState.Error) {
++            isBusy = false
++            step = WizardStep.CONFIRM
++            errorMessage = (uiState as UiState.Error).message.ifBlank { ApkBuilderStrings.createFailed }
++        }
++    }
++
++    fun goBack() {
++        if (step == WizardStep.SOURCE) onProjects()
++        else if (step != WizardStep.CREATING) step = WizardRules.previous(step)
++    }
++
++    fun createAndBuild() {
++        if (!WizardRules.canContinue(step, sourceReady, appName, iconPath != null, splashPath != null)) return
++        val finalIcon = iconPath ?: return
++        val finalSplash = splashPath ?: return
++        val completed: (Long) -> Unit = { id ->
++            isBusy = false
++            if (id > 0) onBuild(id) else {
++                step = WizardStep.CONFIRM
++                errorMessage = ApkBuilderStrings.createFailed
++            }
++        }
++        step = WizardStep.CREATING
++        isBusy = true
++        errorMessage = null
++        when (source) {
++            WizardSource.WEBSITE -> {
++                viewModel.createNewApp()
++                viewModel.updateEditState {
++                    copy(
++                        name = appName.trim(),
++                        url = websiteUrl.trim(),
++                        appType = AppType.WEB,
++                        iconUri = null,
++                        savedIconPath = finalIcon,
++                        splashEnabled = true,
++                        splashMediaUri = Uri.fromFile(File(finalSplash)),
++                        savedSplashPath = finalSplash,
++                        splashConfig = SplashConfig(mediaPath = finalSplash),
++                    )
++                }
++                viewModel.saveApp(onSaved = completed)
++            }
++            WizardSource.HTML_FILE -> {
++                val selected = htmlFile ?: return
++                viewModel.saveHtmlApp(
++                    name = appName.trim(),
++                    htmlConfig = HtmlConfig(entryFile = selected.name, files = listOf(selected)),
++                    iconUri = null,
++                    iconPath = finalIcon,
++                    splashPath = finalSplash,
++                    onCreated = completed,
++                )
++            }
++            WizardSource.ZIP_PROJECT -> {
++                val selected = zipAnalysis ?: return
++                viewModel.saveZipHtmlApp(
++                    name = appName.trim(),
++                    extractedDir = selected.extractDir,
++                    entryFile = selected.entryFile,
++                    iconUri = null,
++                    iconPath = finalIcon,
++                    splashPath = finalSplash,
++                    onCreated = completed,
++                )
++            }
++            null -> {
++                isBusy = false
++                step = WizardStep.SOURCE
++            }
++        }
++    }
++
++    Scaffold(
++        topBar = {
++            Column {
++                TopAppBar(
++                    title = { Text(ApkBuilderStrings.title, fontWeight = FontWeight.Bold) },
++                    navigationIcon = {
++                        IconButton(onClick = ::goBack, enabled = step != WizardStep.CREATING) {
++                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
++                        }
++                    },
++                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
++                )
++                if (step != WizardStep.CREATING) {
++                    LinearProgressIndicator(progress = { (step.ordinal + 1).coerceAtMost(4) / 4f }, modifier = Modifier.fillMaxWidth())
++                }
++            }
++        },
++        bottomBar = {
++            if (step != WizardStep.CREATING) {
++                Surface(shadowElevation = 8.dp) {
++                    Column(
++                        modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
++                        verticalArrangement = Arrangement.spacedBy(10.dp),
++                    ) {
++                        Button(
++                            onClick = {
++                                when (step) {
++                                    WizardStep.SOURCE -> {
++                                        if (source == WizardSource.WEBSITE && !WizardRules.isValidWebsite(websiteUrl)) errorMessage = ApkBuilderStrings.invalidWebsite
++                                        else { errorMessage = null; step = WizardRules.next(step) }
++                                    }
++                                    WizardStep.IDENTITY, WizardStep.SPLASH -> { errorMessage = null; step = WizardRules.next(step) }
++                                    WizardStep.CONFIRM -> createAndBuild()
++                                    WizardStep.CREATING -> Unit
++                                }
++                            },
++                            enabled = !isBusy && WizardRules.canContinue(step, sourceReady, appName, iconPath != null, splashPath != null),
++                            modifier = Modifier.fillMaxWidth().height(54.dp),
++                        ) { Text(if (step == WizardStep.CONFIRM) ApkBuilderStrings.confirmBuild else ApkBuilderStrings.continueLabel) }
++                        if (step == WizardStep.SOURCE) {
++                            OutlinedButton(onClick = onProjects, modifier = Modifier.fillMaxWidth()) { Text(ApkBuilderStrings.projects) }
++                        }
++                    }
++                }
++            }
++        },
++    ) { padding ->
++        Column(
++            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
++            verticalArrangement = Arrangement.spacedBy(16.dp),
++        ) {
++            errorMessage?.let { ErrorCard(it) }
++            when (step) {
++                WizardStep.SOURCE -> SourceStep(
++                    source, websiteUrl, htmlFile, zipAnalysis, isBusy,
++                    onSource = { source = it; errorMessage = null },
++                    onWebsiteUrl = { websiteUrl = it; source = WizardSource.WEBSITE },
++                    onHtml = { htmlPicker.launch(arrayOf("text/html", "application/xhtml+xml", "text/plain")) },
++                    onZip = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
++                )
++                WizardStep.IDENTITY -> IdentityStep(
++                    appName, iconPath, isBusy,
++                    onName = { appName = it },
++                    onUpload = { iconPicker.launch(arrayOf("image/*")) },
++                    onGenerate = {
++                        scope.launch {
++                            isBusy = true
++                            val generated = withContext(Dispatchers.IO) { LocalArtwork.generateIcon(context, appName) }
++                            isBusy = false
++                            if (generated == null) errorMessage = ApkBuilderStrings.artworkFailed
++                            else { iconPath = generated; splashPath = null; errorMessage = null }
++                        }
++                    },
++                )
++                WizardStep.SPLASH -> SplashStep(
++                    splashPath, isBusy,
++                    onUpload = { splashPicker.launch(arrayOf("image/*")) },
++                    onGenerate = generate@{
++                        val selectedIcon = iconPath ?: return@generate
++                        scope.launch {
++                            isBusy = true
++                            val generated = withContext(Dispatchers.IO) { LocalArtwork.generateSplash(context, appName, selectedIcon) }
++                            isBusy = false
++                            if (generated == null) errorMessage = ApkBuilderStrings.artworkFailed
++                            else { splashPath = generated; errorMessage = null }
++                        }
++                    },
++                )
++                WizardStep.CONFIRM -> ConfirmationStep(source, websiteUrl, htmlFile, zipAnalysis, appName, iconPath, splashPath)
++                WizardStep.CREATING -> CreatingStep()
++            }
++            Spacer(Modifier.height(12.dp))
++        }
++    }
++}
++
++@Composable
++private fun SourceStep(
++    source: WizardSource?, websiteUrl: String, htmlFile: HtmlFile?, zipAnalysis: ZipProjectImporter.ZipProjectAnalysis?, isBusy: Boolean,
++    onSource: (WizardSource) -> Unit, onWebsiteUrl: (String) -> Unit, onHtml: () -> Unit, onZip: () -> Unit,
++) {
++    Text(ApkBuilderStrings.sourceTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
++    Text(ApkBuilderStrings.intro, color = MaterialTheme.colorScheme.onSurfaceVariant)
++    SourceCard(Icons.Outlined.Code, ApkBuilderStrings.htmlFile, ApkBuilderStrings.htmlHint, source == WizardSource.HTML_FILE) { onSource(WizardSource.HTML_FILE) }
++    if (source == WizardSource.HTML_FILE) SourceAction(htmlFile?.name, ApkBuilderStrings.selectFile, !isBusy, onHtml)
++    SourceCard(Icons.Outlined.FolderZip, ApkBuilderStrings.zipProject, ApkBuilderStrings.zipHint, source == WizardSource.ZIP_PROJECT) { onSource(WizardSource.ZIP_PROJECT) }
++    if (source == WizardSource.ZIP_PROJECT) SourceAction(zipAnalysis?.zipFileName, ApkBuilderStrings.selectZip, !isBusy, onZip)
++    SourceCard(Icons.Outlined.Language, ApkBuilderStrings.website, ApkBuilderStrings.websiteHint, source == WizardSource.WEBSITE) { onSource(WizardSource.WEBSITE) }
++    if (source == WizardSource.WEBSITE) {
++        OutlinedTextField(value = websiteUrl, onValueChange = onWebsiteUrl, label = { Text(ApkBuilderStrings.urlLabel) }, placeholder = { Text("https://example.com") }, singleLine = true, modifier = Modifier.fillMaxWidth())
++    }
++}
++
++@Composable
++private fun IdentityStep(appName: String, iconPath: String?, isBusy: Boolean, onName: (String) -> Unit, onUpload: () -> Unit, onGenerate: () -> Unit) {
++    Text(ApkBuilderStrings.identityTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
++    OutlinedTextField(value = appName, onValueChange = onName, label = { Text(ApkBuilderStrings.appName) }, singleLine = true, modifier = Modifier.fillMaxWidth())
++    ArtworkPreview(iconPath, square = true)
++    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
++        OutlinedButton(onClick = onUpload, enabled = !isBusy, modifier = Modifier.weight(1f), contentPadding = PaddingValues(12.dp)) {
++            Icon(Icons.Outlined.UploadFile, null); Spacer(Modifier.size(6.dp)); Text(ApkBuilderStrings.uploadIcon)
++        }
++        Button(onClick = onGenerate, enabled = !isBusy && appName.isNotBlank(), modifier = Modifier.weight(1f), contentPadding = PaddingValues(12.dp)) {
++            Icon(Icons.Outlined.AutoAwesome, null); Spacer(Modifier.size(6.dp)); Text(ApkBuilderStrings.generateIcon)
++        }
++    }
++}
++
++@Composable
++private fun SplashStep(splashPath: String?, isBusy: Boolean, onUpload: () -> Unit, onGenerate: () -> Unit) {
++    Text(ApkBuilderStrings.splashTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
++    Text(ApkBuilderStrings.splashHint, color = MaterialTheme.colorScheme.onSurfaceVariant)
++    ArtworkPreview(splashPath, square = false)
++    OutlinedButton(onClick = onUpload, enabled = !isBusy, modifier = Modifier.fillMaxWidth()) {
++        Icon(Icons.Outlined.Image, null); Spacer(Modifier.size(8.dp)); Text(ApkBuilderStrings.uploadSplash)
++    }
++    Button(onClick = onGenerate, enabled = !isBusy, modifier = Modifier.fillMaxWidth()) {
++        Icon(Icons.Outlined.AutoAwesome, null); Spacer(Modifier.size(8.dp)); Text(ApkBuilderStrings.generateSplash)
++    }
++}
++
++@Composable
++private fun ConfirmationStep(
++    source: WizardSource?, websiteUrl: String, htmlFile: HtmlFile?, zipAnalysis: ZipProjectImporter.ZipProjectAnalysis?, appName: String, iconPath: String?, splashPath: String?,
++) {
++    Text(ApkBuilderStrings.confirmTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
++    SummaryCard(ApkBuilderStrings.appName, appName)
++    SummaryCard(ApkBuilderStrings.sourceLabel, when (source) {
++        WizardSource.WEBSITE -> websiteUrl
++        WizardSource.HTML_FILE -> htmlFile?.name.orEmpty()
++        WizardSource.ZIP_PROJECT -> zipAnalysis?.zipFileName.orEmpty()
++        null -> ""
++    })
++    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
++        Column(Modifier.weight(1f)) { ArtworkPreview(iconPath, true); Text(ApkBuilderStrings.iconReady, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
++        Column(Modifier.weight(1f)) { ArtworkPreview(splashPath, false, true); Text(ApkBuilderStrings.splashReady, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
++    }
++}
++
++@Composable
++private fun CreatingStep() {
++    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 100.dp), contentAlignment = Alignment.Center) {
++        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
++            CircularProgressIndicator(modifier = Modifier.size(52.dp)); Text(ApkBuilderStrings.creating, style = MaterialTheme.typography.titleLarge)
++        }
++    }
++}
++
++@Composable
++private fun SourceCard(icon: ImageVector, title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
++    Card(
++        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).then(if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(18.dp)) else Modifier),
++        shape = RoundedCornerShape(18.dp),
++        colors = CardDefaults.cardColors(containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh),
++    ) {
++        Row(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
++            Icon(icon, null, modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
++            Column(Modifier.padding(start = 16.dp).weight(1f)) {
++                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
++                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
++            }
++            if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
++        }
++    }
++}
++
++@Composable
++private fun SourceAction(fileName: String?, label: String, enabled: Boolean, onClick: () -> Unit) {
++    OutlinedButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
++        Icon(Icons.Outlined.UploadFile, null); Spacer(Modifier.size(8.dp)); Text(fileName ?: label, maxLines = 1, overflow = TextOverflow.Ellipsis)
++    }
++}
++
++@Composable
++private fun ArtworkPreview(path: String?, square: Boolean, compact: Boolean = false) {
++    val height = if (square || compact) 190.dp else 360.dp
++    Card(modifier = Modifier.fillMaxWidth().height(height), shape = RoundedCornerShape(24.dp)) {
++        if (path == null) {
++            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
++                Icon(if (square) Icons.Outlined.Android else Icons.Outlined.Image, null, modifier = Modifier.size(54.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
++            }
++        } else {
++            AsyncImage(model = File(path), contentDescription = null, contentScale = if (square) ContentScale.Fit else ContentScale.Crop, modifier = Modifier.fillMaxSize())
++        }
++    }
++}
++
++@Composable
++private fun SummaryCard(label: String, value: String) {
++    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), modifier = Modifier.fillMaxWidth()) {
++        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
++            Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Text(value, style = MaterialTheme.typography.titleMedium)
++        }
++    }
++}
++
++@Composable
++private fun ErrorCard(message: String) {
++    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), modifier = Modifier.fillMaxWidth()) {
++        Text(message, color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.padding(14.dp))
++    }
++}
++
++private fun copyHtmlToCache(context: Context, uri: Uri): HtmlFile? = try {
++    val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
++        if (cursor.moveToFirst()) cursor.getString(0) else null
++    } ?: uri.lastPathSegment?.substringAfterLast('/') ?: "index.html"
++    val extension = name.substringAfterLast('.', "").lowercase()
++    if (extension !in setOf("html", "htm", "xhtml")) return null
++    val directory = File(context.cacheDir, "html_temp/wizard_${System.currentTimeMillis()}").apply { mkdirs() }
++    val safeName = name.replace(Regex("[^A-Za-z0-9._-]"), "_")
++    val file = File(directory, safeName)
++    context.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use(input::copyTo) } ?: return null
++    if (!file.canRead() || file.length() == 0L) return null
++    HtmlFile(name = safeName, path = file.absolutePath, type = HtmlFileType.HTML)
++} catch (_: Exception) {
++    null
 +}
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index 71b5539..e4ab3d8 100644
+index 71b5539f..e4ab3d80 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -1,7 +1,7 @@
@@ -193,10 +934,10 @@ index 71b5539..e4ab3d8 100644
 +</resources>
 diff --git a/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
 new file mode 100644
-index 0000000..94bcdde
+index 00000000..db201fce
 --- /dev/null
 +++ b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,60 @@
 +package com.webtoapp.ui.wizard
 +
 +import org.junit.Assert.assertEquals
@@ -226,5 +967,34 @@ index 0000000..94bcdde
 +        assertEquals(LocalArtwork.paletteIndex("APK Builder"), LocalArtwork.paletteIndex("APK Builder"))
 +        assertTrue(LocalArtwork.paletteIndex("APK Builder") in LocalArtwork.palettes.indices)
 +        assertFalse(LocalArtwork.palettes.isEmpty())
++    }
++
++    @Test
++    fun `website source accepts only usable web addresses`() {
++        assertTrue(WizardRules.isValidWebsite("https://example.com/app"))
++        assertTrue(WizardRules.isValidWebsite("http://192.168.1.5"))
++        assertFalse(WizardRules.isValidWebsite("example.com"))
++        assertFalse(WizardRules.isValidWebsite("file:///storage/index.html"))
++        assertFalse(WizardRules.isValidWebsite("https://"))
++    }
++
++    @Test
++    fun `wizard requires source name icon and splash in order`() {
++        assertFalse(WizardRules.canContinue(WizardStep.SOURCE, sourceReady = false, appName = "", hasIcon = false, hasSplash = false))
++        assertTrue(WizardRules.canContinue(WizardStep.SOURCE, sourceReady = true, appName = "", hasIcon = false, hasSplash = false))
++        assertFalse(WizardRules.canContinue(WizardStep.IDENTITY, sourceReady = true, appName = "My App", hasIcon = false, hasSplash = false))
++        assertTrue(WizardRules.canContinue(WizardStep.IDENTITY, sourceReady = true, appName = "My App", hasIcon = true, hasSplash = false))
++        assertFalse(WizardRules.canContinue(WizardStep.SPLASH, sourceReady = true, appName = "My App", hasIcon = true, hasSplash = false))
++        assertTrue(WizardRules.canContinue(WizardStep.SPLASH, sourceReady = true, appName = "My App", hasIcon = true, hasSplash = true))
++        assertTrue(WizardRules.canContinue(WizardStep.CONFIRM, sourceReady = true, appName = "My App", hasIcon = true, hasSplash = true))
++    }
++
++    @Test
++    fun `wizard progresses through confirmation before creating`() {
++        assertEquals(WizardStep.IDENTITY, WizardRules.next(WizardStep.SOURCE))
++        assertEquals(WizardStep.SPLASH, WizardRules.next(WizardStep.IDENTITY))
++        assertEquals(WizardStep.CONFIRM, WizardRules.next(WizardStep.SPLASH))
++        assertEquals(WizardStep.CREATING, WizardRules.next(WizardStep.CONFIRM))
++        assertEquals(WizardStep.CREATING, WizardRules.next(WizardStep.CREATING))
 +    }
 +}

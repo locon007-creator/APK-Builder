@@ -1,11 +1,6 @@
-name: Verify and Release Real APK Builder
+name: Legacy APK Builder 2.4.3 Verification
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/build-apk.yml"
-      - "README.md"
   workflow_dispatch:
 
 permissions:
@@ -44,7 +39,7 @@ jobs:
           tag_name: apk-builder-latest
           name: APK Builder — Working On-Device Converter
           prerelease: false
-          make_latest: true
+          make_latest: false
           overwrite_files: true
           files: APK-Builder.apk
           body: |
