@@ -1,0 +1,230 @@
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 5c32c10..4eceaeb 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -53,12 +53,12 @@ android {
+     compileSdk = 36
+ 
+     defaultConfig {
+-        applicationId = "com.webtoapp"
++        applicationId = "com.locon007.apkbuilder"
+         minSdk = 23
+ 
+         targetSdk = 28
+-        versionCode = 54
+-        versionName = "2.4.3"
++        versionCode = 300
++        versionName = "3.0.0"
+         buildConfigField("boolean", "SHELL_RUNTIME_ONLY", "false")
+ 
+         vectorDrawables {
+diff --git a/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt b/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
+index 04b790c..86078e3 100644
+--- a/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
++++ b/app/src/main/java/com/webtoapp/ui/navigation/AppNavigation.kt
+@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
+ import org.koin.androidx.compose.koinViewModel
+ 
+ object Routes {
++    const val APK_BUILDER = "apk_builder"
+     const val HOME = "home"
+     const val MORE = "more"
+ 
+@@ -137,13 +138,24 @@ fun AppNavigation() {
+     Box(modifier = Modifier.fillMaxSize()) {
+         NavHost(
+             navController = navController,
+-            startDestination = Routes.HOME,
++            startDestination = Routes.APK_BUILDER,
+             modifier = Modifier.fillMaxSize(),
+             enterTransition = com.webtoapp.ui.animation.pageEnterTransition,
+             exitTransition = com.webtoapp.ui.animation.pageExitTransition,
+             popEnterTransition = com.webtoapp.ui.animation.pagePopEnterTransition,
+             popExitTransition = com.webtoapp.ui.animation.pagePopExitTransition
+         ) {
++            composable(Routes.APK_BUILDER) {
++                com.webtoapp.ui.wizard.ApkBuilderStartScreen(
++                    onWebsite = {
++                        viewModel.createNewApp()
++                        navController.navigate(Routes.CREATE_APP)
++                    },
++                    onHtml = { navController.navigate(Routes.CREATE_HTML_APP) },
++                    onZip = { navController.navigate(Routes.CREATE_HTML_APP) },
++                    onProjects = { navController.navigate(Routes.HOME) },
++                )
++            }
+             composable(Routes.HOME) {
+                 HomeScreen(
+                     viewModel = viewModel,
+diff --git a/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+new file mode 100644
+index 0000000..303991c
+--- /dev/null
++++ b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+@@ -0,0 +1,109 @@
++package com.webtoapp.ui.wizard
++
++import androidx.compose.foundation.clickable
++import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Row
++import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.outlined.Code
++import androidx.compose.material.icons.outlined.FolderZip
++import androidx.compose.material.icons.outlined.Language
++import androidx.compose.material3.Button
++import androidx.compose.material3.Card
++import androidx.compose.material3.CardDefaults
++import androidx.compose.material3.Icon
++import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.OutlinedButton
++import androidx.compose.material3.Text
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.vector.ImageVector
++import androidx.compose.ui.unit.dp
++import kotlin.math.absoluteValue
++
++enum class WizardSource { WEBSITE, HTML_FILE, ZIP_PROJECT }
++
++/** Rules shared by the free on-device icon and splash generators. */
++object LocalArtwork {
++    val palettes = listOf(
++        0xFF5B4BDBL to 0xFF2D1F8FL,
++        0xFF006B5FL to 0xFF003D36L,
++        0xFFB54708L to 0xFF6B2600L,
++        0xFF9B2C63L to 0xFF561234L,
++        0xFF146C94L to 0xFF083A52L,
++    )
++
++    fun initials(appName: String): String {
++        val words = appName.trim().split(Regex("\\s+")).filter(String::isNotBlank)
++        if (words.isEmpty()) return "AP"
++        return if (words.size == 1) words.first().take(1).uppercase()
++        else "${words.first().first()}${words.last().first()}".uppercase()
++    }
++
++    fun paletteIndex(appName: String): Int = appName.hashCode().absoluteValue % palettes.size
++}
++
++@Composable
++fun ApkBuilderStartScreen(
++    onWebsite: () -> Unit,
++    onHtml: () -> Unit,
++    onZip: () -> Unit,
++    onProjects: () -> Unit,
++) {
++    Column(
++        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 28.dp),
++        verticalArrangement = Arrangement.Center,
++    ) {
++        Text("APK Builder", style = MaterialTheme.typography.headlineLarge)
++        Spacer(Modifier.height(8.dp))
++        Text(
++            "Create a real Android APK in a guided flow. Choose what you already have.",
++            style = MaterialTheme.typography.bodyLarge,
++            color = MaterialTheme.colorScheme.onSurfaceVariant,
++        )
++        Spacer(Modifier.height(24.dp))
++        SourceCard(Icons.Outlined.Code, "HTML file", "Upload an .html file and its assets", onHtml)
++        Spacer(Modifier.height(12.dp))
++        SourceCard(Icons.Outlined.FolderZip, "ZIP project", "Upload a complete HTML/CSS/JS project", onZip)
++        Spacer(Modifier.height(12.dp))
++        SourceCard(Icons.Outlined.Language, "Website", "Enter a public website address", onWebsite)
++        Spacer(Modifier.height(24.dp))
++        Button(onClick = onHtml, modifier = Modifier.fillMaxWidth()) { Text("Start with HTML") }
++        Spacer(Modifier.height(10.dp))
++        OutlinedButton(onClick = onProjects, modifier = Modifier.fillMaxWidth()) { Text("My projects") }
++        Spacer(Modifier.height(18.dp))
++        Text(
++            "Next: app name → free icon or upload → splash from icon or upload → options → confirmation → Create APK",
++            style = MaterialTheme.typography.bodySmall,
++            color = MaterialTheme.colorScheme.onSurfaceVariant,
++        )
++    }
++}
++
++@Composable
++private fun SourceCard(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
++    Card(
++        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
++        shape = RoundedCornerShape(18.dp),
++        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
++    ) {
++        Row(
++            modifier = Modifier.fillMaxWidth().padding(18.dp),
++            verticalAlignment = Alignment.CenterVertically,
++        ) {
++            Icon(icon, contentDescription = null, modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
++            Column(Modifier.padding(start = 16.dp)) {
++                Text(title, style = MaterialTheme.typography.titleMedium)
++                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
++            }
++        }
++    }
++}
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index 71b5539..e4ab3d8 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -1,7 +1,7 @@
+ <?xml version='1.0' encoding='utf-8'?>
+ <resources>
+     
+-    <string name="app_name" translatable="false">WebToApp</string>
++    <string name="app_name" translatable="false">APK Builder</string>
+     <string name="app_description">网站转 App</string>
+ 
+     
+@@ -710,4 +710,4 @@
+     <string name="ad_block_no_subscription_selected">未选择规则源</string>
+     <string name="ad_block_enabled_sources_label">已启用规则源</string>
+     <string name="ad_block_add_more_sources">添加更多规则源</string>
+-</resources>
+\ No newline at end of file
++</resources>
+diff --git a/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
+new file mode 100644
+index 0000000..94bcdde
+--- /dev/null
++++ b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
+@@ -0,0 +1,31 @@
++package com.webtoapp.ui.wizard
++
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class ApkBuilderWizardRulesTest {
++    @Test
++    fun `wizard exposes website html and zip sources`() {
++        assertEquals(
++            listOf(WizardSource.WEBSITE, WizardSource.HTML_FILE, WizardSource.ZIP_PROJECT),
++            WizardSource.entries
++        )
++    }
++
++    @Test
++    fun `icon initials are stable and never exceed two characters`() {
++        assertEquals("AB", LocalArtwork.initials("APK Builder"))
++        assertEquals("S", LocalArtwork.initials("shop"))
++        assertEquals("AP", LocalArtwork.initials("  amazing   project "))
++        assertEquals("AP", LocalArtwork.initials(""))
++    }
++
++    @Test
++    fun `each app name deterministically selects an artwork palette`() {
++        assertEquals(LocalArtwork.paletteIndex("APK Builder"), LocalArtwork.paletteIndex("APK Builder"))
++        assertTrue(LocalArtwork.paletteIndex("APK Builder") in LocalArtwork.palettes.indices)
++        assertFalse(LocalArtwork.palettes.isEmpty())
++    }
++}
