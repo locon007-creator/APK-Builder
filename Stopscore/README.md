@@ -17,8 +17,11 @@ duplicates or reimplements driver workflow rules.
 - Hardware back button walks the app's own history before it exits
 - File picker support for uploads
 - Edge-to-edge inset handling for Android 15
-- External schemes (`tel:`, `mailto:`) open in their own apps; all `http(s)` navigation,
+- External schemes (`tel:`, `mailto:`, `geo:`) open in their own apps; `http(s)` navigation,
   including sign-in redirects, stays inside the shell
+- Map links (Google Maps, Apple Maps, Waze, `goo.gl`) are handed to the driver's navigation
+  app rather than rendered in the WebView, matching the app's own promise that Navigate
+  "opens your map app" and that StopScore is not a GPS
 
 No location permission is declared and geolocation is disabled in the WebView: StopScore
 does not use GPS.

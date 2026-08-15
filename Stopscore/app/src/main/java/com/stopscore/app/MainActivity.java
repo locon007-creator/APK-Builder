@@ -38,6 +38,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Locale;
+
 /**
  * Native shell for the StopScore Driver OS web application.
  *
@@ -52,6 +54,11 @@ public class MainActivity extends Activity {
     /** Deployed StopScore Driver OS. */
     private static final String APP_URL = "https://stopscore-driver-os.locon007.chatgpt.site/";
     private static final int REQUEST_FILE_CHOOSER = 1001;
+
+    /** Navigation destinations that belong in the driver's map app, not in the shell. */
+    private static final String[] MAP_HOSTS = {
+            "maps.google.com", "goo.gl", "maps.apple.com", "waze.com",
+    };
 
     private static final int BG = Color.rgb(5, 5, 5);
     private static final int SURFACE = Color.rgb(19, 19, 19);
@@ -234,14 +241,40 @@ public class MainActivity extends Activity {
         });
     }
 
-    /** Keeps web navigation (including sign-in redirects) inside the app; sends everything else out. */
+    /**
+     * Keeps web navigation (including sign-in redirects) inside the app, but hands map links to
+     * the driver's own navigation app. StopScore is not a GPS and tells the driver that Navigate
+     * "opens your map app", so a maps URL must leave the shell rather than render in the WebView.
+     */
     private boolean handleUrl(Uri url) {
         String scheme = url.getScheme();
         if ("http".equals(scheme) || "https".equals(scheme)) {
+            if (isMapHandoff(url)) {
+                openExternally(url);
+                return true;
+            }
             return false;
         }
         openExternally(url);
         return true;
+    }
+
+    private boolean isMapHandoff(Uri url) {
+        String host = url.getHost();
+        if (host == null) {
+            return false;
+        }
+        host = host.toLowerCase(Locale.US);
+        if (host.equals("google.com") || host.equals("www.google.com")) {
+            String path = url.getPath() == null ? "" : url.getPath().toLowerCase(Locale.US);
+            return path.startsWith("/maps");
+        }
+        for (String mapHost : MAP_HOSTS) {
+            if (host.equals(mapHost) || host.endsWith("." + mapHost)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void openExternally(Uri url) {
