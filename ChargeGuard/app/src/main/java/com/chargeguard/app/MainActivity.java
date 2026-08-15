@@ -13,8 +13,9 @@ import android.widget.*;
 
 public class MainActivity extends Activity {
     private LinearLayout root;
-    private TextView percentView, statusView, monitorPill, lowValue, highValue;
+    private TextView percentView, statusView, monitorPill, lowValue, highValue, lastAlertView;
     private SeekBar lowBar, highBar;
+    private Button monitorButton;
     private android.content.SharedPreferences prefs;
     private final int green = Color.rgb(33,208,122), ink = Color.rgb(7,17,13), cardColor = Color.rgb(18,34,27), muted = Color.rgb(159,180,170);
 
@@ -100,6 +101,42 @@ public class MainActivity extends Activity {
         lowBar.setOnSeekBarChangeListener(listener(true));
         highBar.setOnSeekBarChangeListener(listener(false));
 
+        LinearLayout alertOptions = card();
+        alertOptions.addView(text("ALERT SOUND", 13, muted, Typeface.BOLD));
+        spacerIn(alertOptions, 10);
+        Spinner sounds = new Spinner(this);
+        String[] soundNames = {"Alarm sound", "Notification sound", "Phone ringtone"};
+        ArrayAdapter<String> soundAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, soundNames) {
+            @Override public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView v = (TextView)super.getView(position, convertView, parent); v.setTextColor(Color.WHITE); v.setTextSize(16); v.setPadding(dp(8),dp(10),dp(8),dp(10)); return v;
+            }
+        };
+        sounds.setAdapter(soundAdapter);
+        sounds.setSelection(prefs.getInt("soundType", 0));
+        sounds.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(android.widget.AdapterView<?> p, View v, int position, long id) { prefs.edit().putInt("soundType", position).apply(); }
+            public void onNothingSelected(android.widget.AdapterView<?> p) {}
+        });
+        alertOptions.addView(sounds, new LinearLayout.LayoutParams(-1,dp(52)));
+        Switch soundToggle = new Switch(this);
+        soundToggle.setText("Play sound");
+        soundToggle.setTextColor(Color.WHITE);
+        soundToggle.setTextSize(16);
+        soundToggle.setChecked(prefs.getBoolean("soundEnabled", true));
+        soundToggle.setPadding(4,dp(10),4,dp(10));
+        soundToggle.setOnCheckedChangeListener((b, checked) -> prefs.edit().putBoolean("soundEnabled", checked).apply());
+        alertOptions.addView(soundToggle);
+        Switch vibrationToggle = new Switch(this);
+        vibrationToggle.setText("Vibrate");
+        vibrationToggle.setTextColor(Color.WHITE);
+        vibrationToggle.setTextSize(16);
+        vibrationToggle.setChecked(prefs.getBoolean("vibrationEnabled", true));
+        vibrationToggle.setPadding(4,dp(8),4,dp(8));
+        vibrationToggle.setOnCheckedChangeListener((b, checked) -> prefs.edit().putBoolean("vibrationEnabled", checked).apply());
+        alertOptions.addView(vibrationToggle);
+        root.addView(alertOptions);
+        spacer(16);
+
         LinearLayout actions = row();
         Button lowTest = button("Test low alert", Color.rgb(46,55,50), Color.WHITE);
         lowTest.setOnClickListener(v -> test("TEST_LOW"));
@@ -110,6 +147,22 @@ public class MainActivity extends Activity {
         highTest.setOnClickListener(v -> test("TEST_HIGH"));
         actions.addView(highTest,new LinearLayout.LayoutParams(0,dp(54),1));
         root.addView(actions);
+        spacer(12);
+
+        Button stopAlarm = button("Stop current alarm", Color.rgb(116,36,36), Color.WHITE);
+        stopAlarm.setOnClickListener(v -> {
+            if (prefs.getBoolean("enabled", true)) {
+                startService(new Intent(this, BatteryMonitorService.class).setAction(BatteryMonitorService.ACTION_STOP_ALARM));
+                Toast.makeText(this,"Alarm stopped",Toast.LENGTH_SHORT).show();
+            } else Toast.makeText(this,"Monitoring is already off",Toast.LENGTH_SHORT).show();
+        });
+        root.addView(stopAlarm,new LinearLayout.LayoutParams(-1,dp(56)));
+        spacer(12);
+
+        monitorButton = button("Deactivate monitoring", Color.rgb(46,55,50), Color.WHITE);
+        monitorButton.setOnClickListener(v -> toggleMonitoring());
+        root.addView(monitorButton,new LinearLayout.LayoutParams(-1,dp(56)));
+        syncMonitoringUi();
         spacer(16);
 
         Button batterySettings = button("Allow unrestricted battery use", Color.TRANSPARENT, Color.WHITE);
@@ -119,6 +172,9 @@ public class MainActivity extends Activity {
         TextView note = text("For the most reliable alerts on Samsung, tap the button above and choose Unrestricted. Monitoring automatically resumes after restart.", 13, muted, Typeface.NORMAL);
         note.setPadding(4,dp(12),4,0);
         root.addView(note);
+        lastAlertView = text(lastAlertText(), 13, muted, Typeface.NORMAL);
+        lastAlertView.setPadding(4,dp(14),4,0);
+        root.addView(lastAlertView);
         setContentView(scroll);
     }
 
@@ -134,7 +190,10 @@ public class MainActivity extends Activity {
         };
     }
 
-    private void startMonitor() { prefs.edit().putBoolean("enabled", true).apply(); startForegroundService(new Intent(this, BatteryMonitorService.class)); }
+    private void startMonitor() {
+        if (prefs.getBoolean("enabled", true)) startForegroundService(new Intent(this, BatteryMonitorService.class));
+        syncMonitoringUi();
+    }
     private void test(String action) { startForegroundService(new Intent(this, BatteryMonitorService.class).setAction(action)); Toast.makeText(this,"Test alert sent",Toast.LENGTH_SHORT).show(); }
     private void requestNotifications() { if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},7); }
     private void readCurrentBattery() {
@@ -153,6 +212,36 @@ public class MainActivity extends Activity {
     private void openBatterySettings() {
         try { startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, android.net.Uri.parse("package:"+getPackageName()))); }
         catch(Exception e){ startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)); }
+    }
+    private void toggleMonitoring() {
+        boolean enabled = prefs.getBoolean("enabled", true);
+        if (enabled) {
+            prefs.edit().putBoolean("enabled", false).apply();
+            startService(new Intent(this, BatteryMonitorService.class).setAction(BatteryMonitorService.ACTION_DISABLE));
+            Toast.makeText(this, "Battery monitoring deactivated", Toast.LENGTH_SHORT).show();
+        } else {
+            prefs.edit().putBoolean("enabled", true).putLong("snoozeUntil", 0L).apply();
+            startForegroundService(new Intent(this, BatteryMonitorService.class));
+            Toast.makeText(this, "Battery monitoring active", Toast.LENGTH_SHORT).show();
+        }
+        syncMonitoringUi();
+    }
+    private void syncMonitoringUi() {
+        boolean enabled = prefs.getBoolean("enabled", true);
+        if (monitorButton != null) {
+            monitorButton.setText(enabled ? "Deactivate monitoring" : "Activate monitoring");
+            monitorButton.setBackground(round(enabled ? Color.rgb(46,55,50) : green, 18));
+            monitorButton.setTextColor(enabled ? Color.WHITE : ink);
+        }
+        if (monitorPill != null) {
+            monitorPill.setText(enabled ? "● ACTIVE" : "○ OFF");
+            monitorPill.setTextColor(enabled ? green : muted);
+            monitorPill.setBackground(round(enabled ? Color.rgb(14,54,37) : Color.rgb(36,45,41), 100));
+        }
+    }
+    private String lastAlertText() {
+        String last = prefs.getString("lastAlert", "");
+        return last.isEmpty() ? "No alerts yet." : "Last alert: " + last;
     }
     private LinearLayout row(){ LinearLayout l=new LinearLayout(this); l.setOrientation(LinearLayout.HORIZONTAL); l.setGravity(Gravity.CENTER_VERTICAL); return l; }
     private LinearLayout card(){ LinearLayout l=new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(18),dp(18),dp(18),dp(18)); l.setBackground(round(cardColor,22)); return l; }
