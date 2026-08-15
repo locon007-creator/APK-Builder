@@ -11,7 +11,7 @@ duplicates or reimplements driver workflow rules.
 
 - Full-screen WebView of `https://stopscore-driver-os.locon007.chatgpt.site/`
 - Persistent cookies, so a driver signs in once and stays signed in between shifts
-- Branded launch screen that clears as soon as the first page finishes rendering
+- Launch screen using the StopScore logo lockup, cleared as soon as the first page renders
 - Recoverable offline state with a Try again action, separating "no connection" from
   "server unreachable" so a driver knows which one to wait out
 - Hardware back button walks the app's own history before it exits
@@ -22,6 +22,18 @@ duplicates or reimplements driver workflow rules.
 
 No location permission is declared and geolocation is disabled in the WebView: StopScore
 does not use GPS.
+
+## Icon assets
+
+The launcher icon and launch screen are generated from `public/assets/stopscore-logo-transparent.png`
+in the StopScore repository, so the Android surface carries the same mark as the web app:
+
+- `mipmap-anydpi-v26/ic_app.xml` — adaptive icon, gauge-and-truck badge on `#050505`,
+  sized inside the 66dp safe zone so no launcher mask clips it
+- `mipmap-*/ic_app.png` — legacy square icons for launchers that skip adaptive icons
+- `drawable-nodpi/splash_logo.png` — full lockup including the wordmark
+
+Regenerate these from the source logo if the brand mark changes; they are not hand-drawn.
 
 ## Build
 

@@ -299,16 +299,14 @@ public class MainActivity extends Activity {
         splash.setClickable(true);
 
         ImageView mark = new ImageView(this);
-        mark.setImageResource(R.drawable.ic_splash);
-        splash.addView(mark, new LinearLayout.LayoutParams(dp(96), dp(96)));
-
-        TextView name = text("StopScore", 26, TEXT, Typeface.BOLD);
-        name.setPadding(0, dp(20), 0, 0);
-        splash.addView(name);
+        mark.setImageResource(R.drawable.splash_logo);
+        mark.setAdjustViewBounds(true);
+        splash.addView(mark, new LinearLayout.LayoutParams(
+                dp(236), LinearLayout.LayoutParams.WRAP_CONTENT));
 
         TextView tagline = text("DRIVER OS", 11, MUTED, Typeface.BOLD);
         tagline.setLetterSpacing(0.28f);
-        tagline.setPadding(0, dp(6), 0, 0);
+        tagline.setPadding(0, dp(16), 0, 0);
         splash.addView(tagline);
 
         return splash;
