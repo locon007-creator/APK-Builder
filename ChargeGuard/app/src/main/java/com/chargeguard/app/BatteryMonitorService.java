@@ -92,10 +92,7 @@ public class BatteryMonitorService extends Service {
                 .setCategory(Notification.CATEGORY_ALARM).setVisibility(Notification.VISIBILITY_PUBLIC).build();
         getSystemService(NotificationManager.class).notify(disconnect ? 86 : 21, n);
         try {
-            int selected = prefs.getInt("soundType", 0);
-            int ringtoneType = selected == 1 ? RingtoneManager.TYPE_NOTIFICATION : selected == 2 ? RingtoneManager.TYPE_RINGTONE : RingtoneManager.TYPE_ALARM;
-            Uri uri = RingtoneManager.getDefaultUri(ringtoneType);
-            if (uri == null) uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Uri uri = SoundSelection.resolve(this, prefs, disconnect);
             if (prefs.getBoolean("soundEnabled", true)) {
                 ringtone = RingtoneManager.getRingtone(this, uri);
                 if (ringtone != null) ringtone.play();
@@ -107,7 +104,8 @@ public class BatteryMonitorService extends Service {
                     ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createWaveform(new long[]{0,500,250,500,250,800}, -1));
                 }
             }
-            handler.postDelayed(this::stopAlert, 15000);
+            int duration = prefs.getInt("alarmDuration", 15);
+            if (duration > 0) handler.postDelayed(this::stopAlert, duration * 1000L);
         } catch (Exception ignored) { }
     }
 
