@@ -9,11 +9,14 @@ import android.os.*;
 
 public class BatteryMonitorService extends Service {
     public static final String STATUS_CHANNEL = "monitor_status";
-    public static final String ALERT_CHANNEL = "battery_alerts";
+    public static final String ALERT_CHANNEL = "battery_alerts_v2";
     private static final int STATUS_ID = 41;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Ringtone ringtone;
     private boolean lowLatched, highLatched;
+    public static final String ACTION_STOP_ALARM = "STOP_ALARM";
+    public static final String ACTION_SNOOZE = "SNOOZE";
+    public static final String ACTION_DISABLE = "DISABLE";
 
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -38,6 +41,24 @@ public class BatteryMonitorService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && ACTION_STOP_ALARM.equals(intent.getAction())) {
+            stopAlert();
+            return START_STICKY;
+        }
+        if (intent != null && ACTION_SNOOZE.equals(intent.getAction())) {
+            getSharedPreferences("chargeguard", MODE_PRIVATE).edit()
+                    .putLong("snoozeUntil", System.currentTimeMillis() + 30L * 60L * 1000L).apply();
+            stopAlert();
+            getSystemService(NotificationManager.class).cancel(21);
+            getSystemService(NotificationManager.class).cancel(86);
+            return START_STICKY;
+        }
+        if (intent != null && ACTION_DISABLE.equals(intent.getAction())) {
+            getSharedPreferences("chargeguard", MODE_PRIVATE).edit().putBoolean("enabled", false).apply();
+            stopAlert();
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         if (intent != null && "TEST_LOW".equals(intent.getAction())) alert(false, 20);
         if (intent != null && "TEST_HIGH".equals(intent.getAction())) alert(true, 85);
         return START_STICKY;
@@ -46,6 +67,7 @@ public class BatteryMonitorService extends Service {
     private void evaluate(int percent, boolean charging) {
         android.content.SharedPreferences p = getSharedPreferences("chargeguard", MODE_PRIVATE);
         if (!p.getBoolean("enabled", true)) { stopSelf(); return; }
+        if (System.currentTimeMillis() < p.getLong("snoozeUntil", 0L)) return;
         int low = p.getInt("low", 20), high = p.getInt("high", 85);
         if (!charging && percent <= low && !lowLatched) { lowLatched = true; alert(false, percent); }
         if (percent > low + 3 || charging) lowLatched = false;
@@ -54,26 +76,46 @@ public class BatteryMonitorService extends Service {
     }
 
     private void alert(boolean disconnect, int percent) {
+        android.content.SharedPreferences prefs = getSharedPreferences("chargeguard", MODE_PRIVATE);
         String title = disconnect ? "Disconnect your charger" : "Charge your phone now";
         String text = disconnect ? "Battery is at " + percent + "% — unplug to protect long-term battery health." : "Battery is down to " + percent + "% — connect your charger.";
+        prefs.edit().putString("lastAlert", title + " at " + percent + "%").putLong("lastAlertTime", System.currentTimeMillis()).apply();
         Intent open = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(this, disconnect ? 2 : 1, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent stopPi = PendingIntent.getService(this, 90, new Intent(this, BatteryMonitorService.class).setAction(ACTION_STOP_ALARM), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent snoozePi = PendingIntent.getService(this, 91, new Intent(this, BatteryMonitorService.class).setAction(ACTION_SNOOZE), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification n = new Notification.Builder(this, ALERT_CHANNEL)
                 .setSmallIcon(R.drawable.ic_app).setContentTitle(title).setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true)
+                .addAction(new Notification.Action.Builder(null, "Stop alarm", stopPi).build())
+                .addAction(new Notification.Action.Builder(null, "Snooze 30 min", snoozePi).build())
                 .setCategory(Notification.CATEGORY_ALARM).setVisibility(Notification.VISIBILITY_PUBLIC).build();
         getSystemService(NotificationManager.class).notify(disconnect ? 86 : 21, n);
         try {
-            Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            int selected = prefs.getInt("soundType", 0);
+            int ringtoneType = selected == 1 ? RingtoneManager.TYPE_NOTIFICATION : selected == 2 ? RingtoneManager.TYPE_RINGTONE : RingtoneManager.TYPE_ALARM;
+            Uri uri = RingtoneManager.getDefaultUri(ringtoneType);
             if (uri == null) uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            ringtone = RingtoneManager.getRingtone(this, uri);
-            if (ringtone != null) ringtone.play();
-            if (Build.VERSION.SDK_INT >= 31) {
-                ((VibratorManager)getSystemService(VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator().vibrate(VibrationEffect.createWaveform(new long[]{0,500,250,500,250,800}, -1));
-            } else {
-                ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createWaveform(new long[]{0,500,250,500,250,800}, -1));
+            if (prefs.getBoolean("soundEnabled", true)) {
+                ringtone = RingtoneManager.getRingtone(this, uri);
+                if (ringtone != null) ringtone.play();
             }
-            handler.postDelayed(() -> { if (ringtone != null && ringtone.isPlaying()) ringtone.stop(); }, 15000);
+            if (prefs.getBoolean("vibrationEnabled", true)) {
+                if (Build.VERSION.SDK_INT >= 31) {
+                    ((VibratorManager)getSystemService(VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator().vibrate(VibrationEffect.createWaveform(new long[]{0,500,250,500,250,800}, -1));
+                } else {
+                    ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createWaveform(new long[]{0,500,250,500,250,800}, -1));
+                }
+            }
+            handler.postDelayed(this::stopAlert, 15000);
+        } catch (Exception ignored) { }
+    }
+
+    private void stopAlert() {
+        if (ringtone != null && ringtone.isPlaying()) ringtone.stop();
+        try {
+            if (Build.VERSION.SDK_INT >= 31) ((VibratorManager)getSystemService(VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator().cancel();
+            else ((Vibrator)getSystemService(VIBRATOR_SERVICE)).cancel();
         } catch (Exception ignored) { }
     }
 
@@ -81,12 +123,10 @@ public class BatteryMonitorService extends Service {
         NotificationManager nm = getSystemService(NotificationManager.class);
         NotificationChannel status = new NotificationChannel(STATUS_CHANNEL, "Battery monitoring", NotificationManager.IMPORTANCE_LOW);
         status.setDescription("Keeps ChargeGuard active in the background");
-        Uri alarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         NotificationChannel alerts = new NotificationChannel(ALERT_CHANNEL, "Charge alerts", NotificationManager.IMPORTANCE_HIGH);
-        alerts.setDescription("Loud charge and disconnect alerts");
-        alerts.enableVibration(true);
-        alerts.setVibrationPattern(new long[]{0,500,250,500,250,800});
-        if (alarm != null) alerts.setSound(alarm, new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_ALARM).build());
+        alerts.setDescription("Charge and disconnect alerts; sound and vibration are controlled inside ChargeGuard");
+        alerts.enableVibration(false);
+        alerts.setSound(null, null);
         nm.createNotificationChannel(status);
         nm.createNotificationChannel(alerts);
     }
@@ -97,6 +137,6 @@ public class BatteryMonitorService extends Service {
         return new Notification.Builder(this, STATUS_CHANNEL).setSmallIcon(R.drawable.ic_app).setContentTitle("ChargeGuard is protecting your phone").setContentText(text).setContentIntent(pi).setOngoing(true).build();
     }
     private void updateStatus(int percent, boolean charging) { getSystemService(NotificationManager.class).notify(STATUS_ID, statusNotification(percent, charging)); }
-    @Override public void onDestroy() { try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {} if (ringtone != null) ringtone.stop(); super.onDestroy(); }
+    @Override public void onDestroy() { try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {} stopAlert(); super.onDestroy(); }
     @Override public android.os.IBinder onBind(Intent intent) { return null; }
 }
