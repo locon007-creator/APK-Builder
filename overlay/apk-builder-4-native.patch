@@ -1,0 +1,391 @@
+diff --git a/app/src/main/java/com/webtoapp/core/apkbuilder/NativeFeaturePreset.kt b/app/src/main/java/com/webtoapp/core/apkbuilder/NativeFeaturePreset.kt
+new file mode 100644
+--- /dev/null
++++ b/app/src/main/java/com/webtoapp/core/apkbuilder/NativeFeaturePreset.kt
+@@ -0,0 +1,118 @@
++package com.webtoapp.core.apkbuilder
++
++import com.webtoapp.data.model.ApkExportConfig
++import com.webtoapp.data.model.ApkRuntimePermissions
++import com.webtoapp.data.model.NativeBridgeCapabilities
++import com.webtoapp.data.model.ScriptRunTime
++import com.webtoapp.data.model.UserScript
++import com.webtoapp.data.model.WebViewConfig
++import com.webtoapp.data.model.withRuntimePermissionsSyncedFromFeatures
++
++enum class NativeFeature(
++    val title: String,
++    val description: String,
++    val packagedOnly: Boolean = false,
++) {
++    NOTIFICATIONS(
++        "Notifications",
++        "Show Android alerts and app notifications."
++    ),
++    REMINDERS(
++        "Scheduled reminders",
++        "Schedule Android reminders that can fire after the app leaves the screen.",
++        packagedOnly = true,
++    ),
++    BACKGROUND(
++        "Background operation",
++        "Enable the Android foreground/background support used by long-running app features."
++    ),
++    LOCATION(
++        "Location / GPS",
++        "Allow the web app to request the device location when the user approves."
++    ),
++    CAMERA(
++        "Camera",
++        "Allow camera access for supported web inputs and capture features."
++    ),
++    MICROPHONE(
++        "Microphone",
++        "Allow microphone access for supported web audio features."
++    ),
++    BLUETOOTH(
++        "Bluetooth",
++        "Include Android Bluetooth runtime permission support for compatible app features."
++    ),
++    FILES(
++        "Files / storage",
++        "Enable native file-save/download support from packaged HTML."
++    ),
++    VIBRATION(
++        "Vibration / haptics",
++        "Allow packaged HTML to trigger Android vibration feedback.",
++        packagedOnly = true,
++    ),
++}
++
++data class NativeFeatureConfig(
++    val webViewConfig: WebViewConfig,
++    val apkExportConfig: ApkExportConfig,
++)
++
++object NativeFeaturePreset {
++    private const val BRIDGE_ALIAS_SCRIPT =
++        "(function(){if(window.NativeBridge&&!window.APKBuilderNative){window.APKBuilderNative=window.NativeBridge;}})();"
++
++    fun build(
++        features: Set<NativeFeature>,
++        packagedSource: Boolean,
++    ): NativeFeatureConfig {
++        val notifications = NativeFeature.NOTIFICATIONS in features ||
++            NativeFeature.REMINDERS in features ||
++            NativeFeature.BACKGROUND in features
++        val bridgeRequested = packagedSource && features.any {
++            it in setOf(
++                NativeFeature.NOTIFICATIONS,
++                NativeFeature.REMINDERS,
++                NativeFeature.BACKGROUND,
++                NativeFeature.FILES,
++                NativeFeature.VIBRATION,
++            )
++        }
++
++        val bridgeCapabilities = NativeBridgeCapabilities(
++            clipboard = false,
++            vibration = NativeFeature.VIBRATION in features,
++            geolocation = false,
++            brightness = false,
++            notification = notifications,
++            notificationScheduled = NativeFeature.REMINDERS in features,
++            notificationPersistent = NativeFeature.BACKGROUND in features,
++            download = NativeFeature.FILES in features,
++            privateNetwork = false,
++            screenWake = false,
++            openExternal = false,
++            deviceInfo = false,
++            securityInfo = false,
++            networkInfo = NativeFeature.BACKGROUND in features,
++            toast = false,
++            logging = false,
++            findInPage = false,
++            orientation = false,
++            fullscreen = false,
++            print = false,
++        )
++
++        val webView = WebViewConfig(
++            enableNativeBridge = bridgeRequested,
++            nativeBridgeCapabilities = bridgeCapabilities,
++            enableNotificationPolyfill = notifications,
++            geolocationEnabled = NativeFeature.LOCATION in features,
++            downloadEnabled = NativeFeature.FILES in features,
++            injectScripts = if (bridgeRequested) {
++                listOf(UserScript(
++                    name = "APK Builder Native Bridge",
++                    code = BRIDGE_ALIAS_SCRIPT,
++                    enabled = true,
++                    runAt = ScriptRunTime.DOCUMENT_END,
++                ))
++            } else emptyList(),
++        )
++
++        val initialPermissions = ApkRuntimePermissions(
++            camera = NativeFeature.CAMERA in features,
++            microphone = NativeFeature.MICROPHONE in features,
++            location = NativeFeature.LOCATION in features,
++            bluetooth = NativeFeature.BLUETOOTH in features,
++            vibration = NativeFeature.VIBRATION in features,
++        )
++        val export = ApkExportConfig(
++            runtimePermissions = initialPermissions,
++            notificationEnabled = notifications,
++            backgroundRunEnabled = NativeFeature.BACKGROUND in features,
++        ).withRuntimePermissionsSyncedFromFeatures(webViewConfig = webView)
++
++        return NativeFeatureConfig(webViewConfig = webView, apkExportConfig = export)
++    }
++}
+diff --git a/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt b/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
+--- a/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
++++ b/app/src/main/java/com/webtoapp/ui/viewmodel/MainViewModel.kt
+@@ -792,6 +792,8 @@ class MainViewModel(
+         themeType: String = "AURORA",
+         iconPath: String? = null,
+         splashPath: String? = null,
++        webViewConfig: WebViewConfig = WebViewConfig(),
++        apkExportConfig: ApkExportConfig? = null,
+         onCreated: (Long) -> Unit = {}
+     ) = createApp(
+         typeName = "HTML",
+@@ -821,6 +823,8 @@ class MainViewModel(
+             iconPath = savedIconPath,
+             appType = AppType.HTML,
+             htmlConfig = savedHtmlConfig,
++            webViewConfig = webViewConfig,
++            apkExportConfig = apkExportConfig,
+             activationEnabled = false,
+             activationCodeList = emptyList(),
+             bgmEnabled = false,
+@@ -846,6 +850,8 @@ class MainViewModel(
+         portConflictMode: com.webtoapp.data.model.PortConflictMode = com.webtoapp.data.model.PortConflictMode.AUTO_KILL,
+         iconPath: String? = null,
+         splashPath: String? = null,
++        webViewConfig: WebViewConfig = WebViewConfig(),
++        apkExportConfig: ApkExportConfig? = null,
+         onCreated: (Long) -> Unit = {}
+     ) = createApp(
+         typeName = "HTML",
+@@ -879,6 +885,8 @@ class MainViewModel(
+                 port = port,
+                 portConflictMode = portConflictMode
+             ),
++            webViewConfig = webViewConfig,
++            apkExportConfig = apkExportConfig,
+             activationEnabled = false,
+             activationCodeList = emptyList(),
+             bgmEnabled = false,
+diff --git a/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+--- a/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
++++ b/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+@@ -35,6 +35,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
+ import coil.compose.AsyncImage
+ import com.webtoapp.core.i18n.ApkBuilderStrings
++import com.webtoapp.core.apkbuilder.NativeFeature
++import com.webtoapp.core.apkbuilder.NativeFeaturePreset
+ import com.webtoapp.data.model.*
+ import com.webtoapp.ui.viewmodel.MainViewModel
+ import com.webtoapp.ui.viewmodel.UiState
+@@ -50,7 +52,7 @@ import kotlin.math.absoluteValue
+ 
+ enum class WizardSource { WEBSITE, HTML_FILE, ZIP_PROJECT }
+ 
+-enum class WizardStep { SOURCE, IDENTITY, SPLASH, CONFIRM, CREATING }
++enum class WizardStep { SOURCE, IDENTITY, SPLASH, NATIVE_FEATURES, CONFIRM, CREATING }
+ 
+ object WizardRules {
+     fun isValidWebsite(value: String): Boolean = try {
+@@ -72,6 +74,7 @@ object WizardRules {
+         WizardStep.SOURCE -> sourceReady
+         WizardStep.IDENTITY -> appName.isNotBlank() && hasIcon
+         WizardStep.SPLASH -> hasIcon && hasSplash
++        WizardStep.NATIVE_FEATURES -> true
+         WizardStep.CONFIRM -> sourceReady && appName.isNotBlank() && hasIcon && hasSplash
+         WizardStep.CREATING -> false
+     }
+@@ -79,14 +82,16 @@ object WizardRules {
+     fun next(step: WizardStep): WizardStep = when (step) {
+         WizardStep.SOURCE -> WizardStep.IDENTITY
+         WizardStep.IDENTITY -> WizardStep.SPLASH
+-        WizardStep.SPLASH -> WizardStep.CONFIRM
++        WizardStep.SPLASH -> WizardStep.NATIVE_FEATURES
++        WizardStep.NATIVE_FEATURES -> WizardStep.CONFIRM
+         WizardStep.CONFIRM, WizardStep.CREATING -> WizardStep.CREATING
+     }
+ 
+     fun previous(step: WizardStep): WizardStep = when (step) {
+         WizardStep.SOURCE, WizardStep.IDENTITY -> WizardStep.SOURCE
+         WizardStep.SPLASH -> WizardStep.IDENTITY
+-        WizardStep.CONFIRM, WizardStep.CREATING -> WizardStep.SPLASH
++        WizardStep.NATIVE_FEATURES -> WizardStep.SPLASH
++        WizardStep.CONFIRM, WizardStep.CREATING -> WizardStep.NATIVE_FEATURES
+     }
+ }
+@@ -172,6 +177,7 @@ fun ApkBuilderWizardScreen(
+     var appName by remember { mutableStateOf("") }
+     var iconPath by remember { mutableStateOf<String?>(null) }
+     var splashPath by remember { mutableStateOf<String?>(null) }
++    var nativeFeatures by remember { mutableStateOf<Set<NativeFeature>>(emptySet()) }
+     var errorMessage by remember { mutableStateOf<String?>(null) }
+     var isBusy by remember { mutableStateOf(false) }
+@@ -270,6 +276,10 @@ fun ApkBuilderWizardScreen(
+         val finalIcon = iconPath ?: return
+         val finalSplash = splashPath ?: return
++        val nativeConfig = NativeFeaturePreset.build(
++            features = nativeFeatures,
++            packagedSource = source != WizardSource.WEBSITE,
++        )
+         val completed: (Long) -> Unit = { id ->
+             isBusy = false
+             if (id > 0) onBuild(id) else {
+@@ -291,6 +301,8 @@ fun ApkBuilderWizardScreen(
+                         savedSplashPath = finalSplash,
+                         splashConfig = SplashConfig(mediaPath = finalSplash),
++                        webViewConfig = nativeConfig.webViewConfig,
++                        apkExportConfig = nativeConfig.apkExportConfig,
+                     )
+                 }
+                 viewModel.saveApp(onSaved = completed)
+@@ -305,6 +317,8 @@ fun ApkBuilderWizardScreen(
+                     iconUri = null,
+                     iconPath = finalIcon,
+                     splashPath = finalSplash,
++                    webViewConfig = nativeConfig.webViewConfig,
++                    apkExportConfig = nativeConfig.apkExportConfig,
+                     onCreated = completed,
+                 )
+             }
+@@ -319,6 +333,8 @@ fun ApkBuilderWizardScreen(
+                     iconUri = null,
+                     iconPath = finalIcon,
+                     splashPath = finalSplash,
++                    webViewConfig = nativeConfig.webViewConfig,
++                    apkExportConfig = nativeConfig.apkExportConfig,
+                     onCreated = completed,
+                 )
+             }
+@@ -342,7 +358,7 @@ fun ApkBuilderWizardScreen(
+                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                 )
+                 if (step != WizardStep.CREATING) {
+-                    LinearProgressIndicator(progress = { (step.ordinal + 1).coerceAtMost(4) / 4f }, modifier = Modifier.fillMaxWidth())
++                    LinearProgressIndicator(progress = { (step.ordinal + 1).coerceAtMost(5) / 5f }, modifier = Modifier.fillMaxWidth())
+                 }
+             }
+         },
+@@ -362,7 +378,7 @@ fun ApkBuilderWizardScreen(
+                                         if (source == WizardSource.WEBSITE && !WizardRules.isValidWebsite(websiteUrl)) errorMessage = ApkBuilderStrings.invalidWebsite
+                                         else { errorMessage = null; step = WizardRules.next(step) }
+                                     }
+-                                    WizardStep.IDENTITY, WizardStep.SPLASH -> { errorMessage = null; step = WizardRules.next(step) }
++                                    WizardStep.IDENTITY, WizardStep.SPLASH, WizardStep.NATIVE_FEATURES -> { errorMessage = null; step = WizardRules.next(step) }
+                                     WizardStep.CONFIRM -> createAndBuild()
+                                     WizardStep.CREATING -> Unit
+                                 }
+@@ -391,7 +407,13 @@ fun ApkBuilderWizardScreen(
+             when (step) {
+                 WizardStep.SOURCE -> SourceStep(
+                     source, websiteUrl, htmlFile, zipAnalysis, isBusy,
+-                    onSource = { source = it; errorMessage = null },
++                    onSource = {
++                        source = it
++                        if (it == WizardSource.WEBSITE) {
++                            nativeFeatures = nativeFeatures.filterNot(NativeFeature::packagedOnly).toSet()
++                        }
++                        errorMessage = null
++                    },
+                     onWebsiteUrl = { websiteUrl = it; source = WizardSource.WEBSITE },
+                     onHtml = { htmlPicker.launch(arrayOf("text/html", "application/xhtml+xml", "text/plain")) },
+                     onZip = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+@@ -420,7 +442,17 @@ fun ApkBuilderWizardScreen(
+                         }
+                     },
+                 )
+-                WizardStep.CONFIRM -> ConfirmationStep(source, websiteUrl, htmlFile, zipAnalysis, appName, iconPath, splashPath)
++                WizardStep.NATIVE_FEATURES -> NativeFeaturesStep(
++                    selected = nativeFeatures,
++                    websiteSource = source == WizardSource.WEBSITE,
++                    onToggle = { feature ->
++                        nativeFeatures = if (feature in nativeFeatures) nativeFeatures - feature else nativeFeatures + feature
++                    },
++                )
++                WizardStep.CONFIRM -> ConfirmationStep(
++                    source, websiteUrl, htmlFile, zipAnalysis, appName, iconPath, splashPath, nativeFeatures
++                )
+                 WizardStep.CREATING -> CreatingStep()
+             }
+@@ -487,9 +519,52 @@ private fun SplashStep(splashPath: String?, isBusy: Boolean, onUpload: () -> Unit, onGenerate: () -> Unit) {
+     }
+ }
+ 
++@Composable
++private fun NativeFeaturesStep(
++    selected: Set<NativeFeature>,
++    websiteSource: Boolean,
++    onToggle: (NativeFeature) -> Unit,
++) {
++    Text("Native features", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
++    Text(
++        "Choose only what this app needs. Android will still ask the user before granting protected permissions.",
++        color = MaterialTheme.colorScheme.onSurfaceVariant,
++    )
++    if (websiteSource) {
++        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
++            Text(
++                "Website wrappers keep the privileged native bridge off for security. Features marked packaged-only are available for HTML/ZIP apps.",
++                modifier = Modifier.padding(14.dp),
++                color = MaterialTheme.colorScheme.onSecondaryContainer,
++            )
++        }
++    }
++    NativeFeature.entries.forEach { feature ->
++        val enabled = !websiteSource || !feature.packagedOnly
++        Card(
++            modifier = Modifier.fillMaxWidth().then(
++                if (enabled) Modifier.clickable { onToggle(feature) } else Modifier
++            ),
++            colors = CardDefaults.cardColors(
++                containerColor = if (feature in selected) MaterialTheme.colorScheme.primaryContainer
++                else MaterialTheme.colorScheme.surfaceContainerHigh
++            ),
++        ) {
++            Row(
++                modifier = Modifier.fillMaxWidth().padding(16.dp),
++                verticalAlignment = Alignment.CenterVertically,
++            ) {
++                Checkbox(
++                    checked = feature in selected,
++                    onCheckedChange = if (enabled) ({ onToggle(feature) }) else null,
++                    enabled = enabled,
++                )
++                Column(Modifier.padding(start = 10.dp).weight(1f)) {
++                    Text(feature.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
++                    Text(feature.description, color = MaterialTheme.colorScheme.onSurfaceVariant)
++                    if (!enabled) Text("HTML/ZIP only", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
++                }
++            }
++        }
++    }
++}
++
+ @Composable
+ private fun ConfirmationStep(
+-    source: WizardSource?, websiteUrl: String, htmlFile: HtmlFile?, zipAnalysis: ZipProjectImporter.ZipProjectAnalysis?, appName: String, iconPath: String?, splashPath: String?,
++    source: WizardSource?, websiteUrl: String, htmlFile: HtmlFile?, zipAnalysis: ZipProjectImporter.ZipProjectAnalysis?, appName: String, iconPath: String?, splashPath: String?, nativeFeatures: Set<NativeFeature>,
+ ) {
+     Text(ApkBuilderStrings.confirmTitle, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+     SummaryCard(ApkBuilderStrings.appName, appName)
+@@ -501,6 +576,11 @@ private fun ConfirmationStep(
+         WizardSource.ZIP_PROJECT -> zipAnalysis?.zipFileName.orEmpty()
+         null -> ""
+     })
++    SummaryCard(
++        "Native features",
++        if (nativeFeatures.isEmpty()) "None" else nativeFeatures.joinToString(" · ") { it.title }
++    )
+     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+         Column(Modifier.weight(1f)) { ArtworkPreview(iconPath, true); Text(ApkBuilderStrings.iconReady, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
+         Column(Modifier.weight(1f)) { ArtworkPreview(splashPath, false, true); Text(ApkBuilderStrings.splashReady, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
