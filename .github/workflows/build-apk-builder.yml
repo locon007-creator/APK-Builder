@@ -1,9 +1,10 @@
-name: Build APK Builder 3.1.1
+name: Build APK Builder 4.0.0
 on:
   push:
     branches: [main]
     paths:
       - "overlay/apk-builder.patch"
+      - "scripts/apply-native-features.py"
       - ".github/workflows/build-apk-builder.yml"
   workflow_dispatch:
 permissions:
@@ -20,6 +21,8 @@ jobs:
         run: git clone https://github.com/shiaho777/web-to-app.git source && git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
       - name: Apply APK Builder wizard
         run: git -C source apply --check ../overlay-repo/overlay/apk-builder.patch && git -C source apply ../overlay-repo/overlay/apk-builder.patch
+      - name: Apply APK Builder 4 native features
+        run: python3 overlay-repo/scripts/apply-native-features.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -28,7 +31,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Install Android build tools
         run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;28.2.13676358"
-      - name: Test wizard and converter
+      - name: Test wizard, native features, and converter
         working-directory: source
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
       - name: Build installable test APK
@@ -48,9 +51,9 @@ jobs:
           sha256sum APK-Builder.apk > APK-Builder.apk.sha256
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.1.1
-          name: APK Builder 3.1.1
-          body: "Fixes APK builds failing at Loading template APK by embedding and validating the required WebView shell template. Includes the complete guided APK Builder wizard for HTML files, ZIP projects, and websites. No paid API key required."
+          tag_name: v4.0.0
+          name: APK Builder 4.0.0
+          body: "Adds a Native Features step to the guided builder. HTML, ZIP and website projects can now select Android notifications, reminders, background operation, location, camera, microphone, Bluetooth, file/media access and vibration before APK creation. The selected capabilities are wired into the existing runtime permission model, background configuration and NativeBridge while preserving the proven on-device conversion/signing engine."
           files: |
             APK-Builder.apk
             APK-Builder.apk.sha256
