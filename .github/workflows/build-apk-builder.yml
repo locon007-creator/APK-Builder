@@ -1,15 +1,17 @@
-name: Build APK Builder 3.1.1
+name: Build APK Builder 4 Native Capabilities
 on:
   push:
-    branches: [main]
+    branches: [feature/apk-builder-4-native-capabilities]
     paths:
       - "overlay/apk-builder.patch"
+      - "overlay/apk-builder-4-tests.patch"
+      - "overlay/apk-builder-4-native.patch"
       - ".github/workflows/build-apk-builder.yml"
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  test-build-release:
+  test-build:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -18,8 +20,12 @@ jobs:
           path: overlay-repo
       - name: Clone pinned conversion engine
         run: git clone https://github.com/shiaho777/web-to-app.git source && git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
-      - name: Apply APK Builder wizard
+      - name: Apply APK Builder 3 wizard base
         run: git -C source apply --check ../overlay-repo/overlay/apk-builder.patch && git -C source apply ../overlay-repo/overlay/apk-builder.patch
+      - name: Apply APK Builder 4 tests
+        run: git -C source apply --check ../overlay-repo/overlay/apk-builder-4-tests.patch && git -C source apply ../overlay-repo/overlay/apk-builder-4-tests.patch
+      - name: Apply APK Builder 4 native capabilities
+        run: git -C source apply --check ../overlay-repo/overlay/apk-builder-4-native.patch && git -C source apply ../overlay-repo/overlay/apk-builder-4-native.patch
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -28,13 +34,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Install Android build tools
         run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;28.2.13676358"
-      - name: Test wizard and converter
+      - name: Test wizard, native presets, and converter
         working-directory: source
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
-      - name: Build installable test APK
+      - name: Build installable candidate APK
         working-directory: source
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
-      - name: Verify APK
+      - name: Verify APK and embedded shell
         run: |
           APK=$(find source/app/build/outputs/apk -name "*.apk" -type f | head -1)
           test -s "$APK"
@@ -44,15 +50,12 @@ jobs:
           test -s embedded-webview-shell.apk
           unzip -tqq embedded-webview-shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
-          cp "$APK" APK-Builder.apk
-          sha256sum APK-Builder.apk > APK-Builder.apk.sha256
-      - uses: softprops/action-gh-release@v2
+          cp "$APK" APK-Builder-4.0-candidate.apk
+          sha256sum APK-Builder-4.0-candidate.apk > APK-Builder-4.0-candidate.apk.sha256
+      - uses: actions/upload-artifact@v4
         with:
-          tag_name: v3.1.1
-          name: APK Builder 3.1.1
-          body: "Fixes APK builds failing at Loading template APK by embedding and validating the required WebView shell template. Includes the complete guided APK Builder wizard for HTML files, ZIP projects, and websites. No paid API key required."
-          files: |
-            APK-Builder.apk
-            APK-Builder.apk.sha256
-          fail_on_unmatched_files: true
-          make_latest: true
+          name: APK-Builder-4.0-candidate
+          path: |
+            APK-Builder-4.0-candidate.apk
+            APK-Builder-4.0-candidate.apk.sha256
+          if-no-files-found: error
