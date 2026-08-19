@@ -1,0 +1,104 @@
+diff --git a/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
+--- a/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
++++ b/app/src/test/java/com/webtoapp/ui/wizard/ApkBuilderWizardRulesTest.kt
+@@ -52,9 +52,12 @@ class ApkBuilderWizardRulesTest {
+     fun `wizard progresses through confirmation before creating`() {
+         assertEquals(WizardStep.IDENTITY, WizardRules.next(WizardStep.SOURCE))
+         assertEquals(WizardStep.SPLASH, WizardRules.next(WizardStep.IDENTITY))
+-        assertEquals(WizardStep.CONFIRM, WizardRules.next(WizardStep.SPLASH))
++        assertEquals(WizardStep.NATIVE_FEATURES, WizardRules.next(WizardStep.SPLASH))
++        assertEquals(WizardStep.CONFIRM, WizardRules.next(WizardStep.NATIVE_FEATURES))
+         assertEquals(WizardStep.CREATING, WizardRules.next(WizardStep.CONFIRM))
+         assertEquals(WizardStep.CREATING, WizardRules.next(WizardStep.CREATING))
++        assertEquals(WizardStep.SPLASH, WizardRules.previous(WizardStep.NATIVE_FEATURES))
++        assertEquals(WizardStep.NATIVE_FEATURES, WizardRules.previous(WizardStep.CONFIRM))
+     }
+ }
+diff --git a/app/src/test/java/com/webtoapp/core/apkbuilder/NativeFeaturePresetTest.kt b/app/src/test/java/com/webtoapp/core/apkbuilder/NativeFeaturePresetTest.kt
+new file mode 100644
+--- /dev/null
++++ b/app/src/test/java/com/webtoapp/core/apkbuilder/NativeFeaturePresetTest.kt
+@@ -0,0 +1,81 @@
++package com.webtoapp.core.apkbuilder
++
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class NativeFeaturePresetTest {
++    @Test
++    fun `notifications and reminders enable native notification bridge for packaged apps`() {
++        val result = NativeFeaturePreset.build(
++            features = setOf(NativeFeature.NOTIFICATIONS, NativeFeature.REMINDERS),
++            packagedSource = true,
++        )
++
++        assertTrue(result.webViewConfig.enableNativeBridge)
++        assertTrue(result.webViewConfig.nativeBridgeCapabilities.notification)
++        assertTrue(result.webViewConfig.nativeBridgeCapabilities.notificationScheduled)
++        assertTrue(result.apkExportConfig.notificationEnabled)
++        assertTrue(result.apkExportConfig.runtimePermissions.notifications)
++    }
++
++    @Test
++    fun `background feature enables converter background runtime requirements`() {
++        val result = NativeFeaturePreset.build(
++            features = setOf(NativeFeature.BACKGROUND),
++            packagedSource = true,
++        )
++
++        assertTrue(result.apkExportConfig.backgroundRunEnabled)
++        assertTrue(result.apkExportConfig.runtimePermissions.foregroundService)
++        assertTrue(result.apkExportConfig.runtimePermissions.wakeLock)
++        assertTrue(result.webViewConfig.nativeBridgeCapabilities.notificationPersistent)
++    }
++
++    @Test
++    fun `device features map to runtime permissions`() {
++        val result = NativeFeaturePreset.build(
++            features = setOf(
++                NativeFeature.LOCATION,
++                NativeFeature.CAMERA,
++                NativeFeature.MICROPHONE,
++                NativeFeature.BLUETOOTH,
++                NativeFeature.VIBRATION,
++            ),
++            packagedSource = true,
++        )
++
++        assertTrue(result.webViewConfig.geolocationEnabled)
++        assertTrue(result.apkExportConfig.runtimePermissions.location)
++        assertTrue(result.apkExportConfig.runtimePermissions.camera)
++        assertTrue(result.apkExportConfig.runtimePermissions.microphone)
++        assertTrue(result.apkExportConfig.runtimePermissions.bluetooth)
++        assertTrue(result.apkExportConfig.runtimePermissions.vibration)
++    }
++
++    @Test
++    fun `packaged bridge exposes APK Builder alias script`() {
++        val result = NativeFeaturePreset.build(
++            features = setOf(NativeFeature.VIBRATION),
++            packagedSource = true,
++        )
++
++        assertTrue(result.webViewConfig.enableNativeBridge)
++        assertTrue(result.webViewConfig.injectScripts.any { it.code.contains("APKBuilderNative") })
++    }
++
++    @Test
++    fun `remote website never receives privileged native bridge`() {
++        val result = NativeFeaturePreset.build(
++            features = setOf(
++                NativeFeature.NOTIFICATIONS,
++                NativeFeature.REMINDERS,
++                NativeFeature.BACKGROUND,
++                NativeFeature.VIBRATION,
++            ),
++            packagedSource = false,
++        )
++
++        assertFalse(result.webViewConfig.enableNativeBridge)
++        assertFalse(result.webViewConfig.injectScripts.any { it.code.contains("APKBuilderNative") })
++        assertTrue(result.webViewConfig.enableNotificationPolyfill)
++    }
++}
