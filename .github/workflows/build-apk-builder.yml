@@ -22,7 +22,7 @@ jobs:
       - name: Apply APK Builder wizard
         run: git -C source apply --check ../overlay-repo/overlay/apk-builder.patch && git -C source apply ../overlay-repo/overlay/apk-builder.patch
       - name: Apply APK Builder 4 native features
-        run: python3 overlay-repo/scripts/apply-native-features.py
+        run: cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py && python3 source/scripts/apply-native-features.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
