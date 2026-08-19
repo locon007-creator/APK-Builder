@@ -53,9 +53,10 @@ jobs:
         run: |
           HASH=$(cut -d' ' -f1 APK-Builder.apk.sha256)
           cd overlay-repo
-          printf 'APK Builder 4.0.0 verified\nsource_commit=%s\napk_sha256=%s\n' "$GITHUB_SHA" "$HASH" > BUILD_STATUS_4.0.0.txt
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git pull --rebase origin main
+          printf 'APK Builder 4.0.0 verified\nsource_commit=%s\napk_sha256=%s\n' "$GITHUB_SHA" "$HASH" > BUILD_STATUS_4.0.0.txt
           git add BUILD_STATUS_4.0.0.txt
           git commit -m "Record verified APK Builder 4.0.0 build" || true
           git push
