@@ -7,6 +7,13 @@ on:
       - "overlay/apk-builder-4-tests.patch"
       - "overlay/apk-builder-4-native.patch"
       - ".github/workflows/build-apk-builder.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "overlay/apk-builder.patch"
+      - "overlay/apk-builder-4-tests.patch"
+      - "overlay/apk-builder-4-native.patch"
+      - ".github/workflows/build-apk-builder.yml"
   workflow_dispatch:
 permissions:
   contents: read
