@@ -1,0 +1,5 @@
+status=READY
+run_id=32326781125
+run_attempt=1
+apk_sha256=3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b
+artifact_name=My-Life-APK-Chat-Handoff
