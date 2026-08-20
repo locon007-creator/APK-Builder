@@ -1,0 +1,42 @@
+name: Export My Life APK To Chat-Safe Chunks
+
+on:
+  push:
+    branches: [my-life-final-one-shot]
+    paths: [".export-apk"]
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify and split finished APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s output-v3/My-Life.apk
+          echo "3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b  output-v3/My-Life.apk" | sha256sum --check
+          rm -rf apk-export
+          mkdir -p apk-export
+          base64 -w 0 output-v3/My-Life.apk > /tmp/My-Life.apk.b64
+          split -b 12000 -d -a 3 /tmp/My-Life.apk.b64 apk-export/part_
+          {
+            echo "apk_sha256=3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b"
+            echo "apk_bytes=$(stat -c %s output-v3/My-Life.apk)"
+            echo "base64_bytes=$(stat -c %s /tmp/My-Life.apk.b64)"
+            echo "parts=$(find apk-export -name 'part_*' -type f | wc -l)"
+          } > apk-export/META.txt
+
+      - name: Commit export chunks
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apk-export
+          git commit -m 'Export verified My Life APK for chat transfer' || true
+          git push origin HEAD:my-life-final-one-shot
