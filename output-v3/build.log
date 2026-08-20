@@ -1,0 +1,49 @@
+Loading package information...                                                  Loading local repository...                                                     [                                       ] 3% Loading local repository...        [                                       ] 3% Fetch remote repository...         [=                                      ] 3% Fetch remote repository...         [=                                      ] 4% Fetch remote repository...         [=                                      ] 5% Fetch remote repository...         [==                                     ] 5% Fetch remote repository...         [==                                     ] 6% Fetch remote repository...         [==                                     ] 7% Fetch remote repository...         [==                                     ] 7% Computing updates...               [===                                    ] 8% Computing updates...               [===                                    ] 10% Computing updates...              [=======================================] 100% Computing updates...             
+
+my-life-apk/assets/index.html: OK
+ReminderTimeCalculatorTest: PASS
+warning: [options] bootstrap class path not set in conjunction with -source 8
+Note: my-life-apk/src/com/osulsa/mylife/MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+1 warning
+  adding: classes.dex (deflated 49%)
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 10,000 days
+	for: CN=My Life Test, O=OSULSA, C=US
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=My Life Test, O=OSULSA, C=US
+Signer #1 certificate SHA-256 digest: 0e836abfe45bb57f9371de159eb8f1b5a077d981974aebd776d59ccce4c16c63
+Signer #1 certificate SHA-1 digest: aa9531de41d1663eba68d4bfdf6bf347e859c420
+Signer #1 certificate MD5 digest: a64110517cafb3c31ab214774e24c130
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 4674fbf51c13952d9ea4d38f5be29e1e2c7a317c5245158b0dbca4e8435ae77f
+Signer #1 public key SHA-1 digest: 7aab01f4f5ff261e68ed0877896f2cf790e87dd5
+Signer #1 public key MD5 digest: affc107e9072be2e6a80b8566cdfc93c
+package: name='com.osulsa.mylife' versionCode='' versionName='' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'26'
+targetSdkVersion:'36'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'My Life'
+application-icon-160:'res/drawable/ic_launcher.xml'
+application: label='My Life' icon='res/drawable/ic_launcher.xml'
+launchable-activity: name='com.osulsa.mylife.MainActivity'  label='' icon=''
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+main
+other-receivers
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b  output-v3/My-Life.apk
