@@ -1,0 +1,50 @@
+name: Handoff Verified My Life APK
+
+on:
+  push:
+    branches: [my-life-final-one-shot]
+    paths: [".handoff-apk"]
+
+permissions:
+  contents: write
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify finished APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s output-v3/My-Life.apk
+          echo "3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b  output-v3/My-Life.apk" | sha256sum --check
+          unzip -tqq output-v3/My-Life.apk
+
+      - name: Upload exact APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Life-APK-Chat-Handoff
+          path: output-v3/My-Life.apk
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Record run ID for connector handoff
+        shell: bash
+        run: |
+          mkdir -p handoff
+          {
+            echo "status=READY"
+            echo "run_id=$GITHUB_RUN_ID"
+            echo "run_attempt=$GITHUB_RUN_ATTEMPT"
+            echo "apk_sha256=3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b"
+            echo "artifact_name=My-Life-APK-Chat-Handoff"
+          } > handoff/HANDOFF_RESULT.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add handoff/HANDOFF_RESULT.txt
+          git commit -m "Record My Life APK handoff run ID" || true
+          git push origin HEAD:my-life-final-one-shot
