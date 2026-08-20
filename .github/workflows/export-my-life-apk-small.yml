@@ -1,0 +1,37 @@
+name: Export My Life APK Small Chunks
+
+on:
+  push:
+    branches: [my-life-final-one-shot]
+    paths: [".export-apk-small"]
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Split verified APK into 4K text chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s output-v3/My-Life.apk
+          echo "3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b  output-v3/My-Life.apk" | sha256sum --check
+          rm -rf apk-transfer
+          mkdir -p apk-transfer
+          base64 -w 0 output-v3/My-Life.apk > /tmp/My-Life.apk.b64
+          split -b 4000 -d -a 3 --additional-suffix=.txt /tmp/My-Life.apk.b64 apk-transfer/part_
+          {
+            echo "apk_sha256=3586c1892809af8d4f9e704af664f761b77df17f7eb9dacdfc07015682401a7b"
+            echo "apk_bytes=$(stat -c %s output-v3/My-Life.apk)"
+            echo "base64_bytes=$(stat -c %s /tmp/My-Life.apk.b64)"
+            echo "parts=$(find apk-transfer -name 'part_*.txt' -type f | wc -l)"
+          } > apk-transfer/META.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add apk-transfer
+          git commit -m 'Export My Life APK in small transfer chunks' || true
+          git push origin HEAD:my-life-final-one-shot
