@@ -7,6 +7,12 @@ on:
     paths:
       - "my-life-apk/**"
       - ".github/workflows/build-mylife-apk.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "my-life-apk/**"
+      - ".github/workflows/build-mylife-apk.yml"
 
 permissions:
   contents: read
