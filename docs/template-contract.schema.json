@@ -10,6 +10,7 @@
     "templateFile",
     "sha256",
     "minimumBuilderVersion",
+    "packageSkeleton",
     "requiredEntries",
     "capabilities"
   ],
