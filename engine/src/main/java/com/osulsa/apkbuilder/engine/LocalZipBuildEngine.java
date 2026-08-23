@@ -51,12 +51,11 @@ public final class LocalZipBuildEngine {
         throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Immutable bundled template changed during ZIP build");
       }
 
-      Path outputParent = verifiedOutput.toAbsolutePath().getParent();
-      if (outputParent != null) Files.createDirectories(outputParent);
-      Files.copy(signed, verifiedOutput, StandardCopyOption.REPLACE_EXISTING);
-      ApkV1Verifier.verify(verifiedOutput);
-      ZipAlignmentVerifier.verify(verifiedOutput);
-      verifyPayload(verifiedOutput, project, contract);
+      AtomicApkPublisher.publish(signed, verifiedOutput, candidate -> {
+        ApkV1Verifier.verify(candidate);
+        ZipAlignmentVerifier.verify(candidate);
+        verifyPayload(candidate, project, contract);
+      });
 
       String outputHash = Hashing.sha256(verifiedOutput);
       String inputHash = Hashing.sha256(projectArchive);
