@@ -11,6 +11,10 @@ public final class ApkHtmlInjector {
   private static final String CONFIG_ENTRY = "assets/app_config.json";
 
   public static void injectSingleHtml(Path stagedApk, Path outputApk, byte[] html, String packageName) throws TemplateException {
+    injectSingleHtml(stagedApk, outputApk, html, new AppIdentity("Generated App", packageName, 1, "1.0.0"));
+  }
+
+  public static void injectSingleHtml(Path stagedApk, Path outputApk, byte[] html, AppIdentity identity) throws TemplateException {
     try (ZipFile input = new ZipFile(stagedApk.toFile());
          AlignedZip.CountingOutputStream count = new AlignedZip.CountingOutputStream(Files.newOutputStream(outputApk));
          ZipOutputStream out = new ZipOutputStream(count)) {
@@ -24,7 +28,7 @@ public final class ApkHtmlInjector {
       ZipEntry htmlEntry = new ZipEntry(HTML_ENTRY); htmlEntry.setTime(AlignedZip.ZIP_TIME); htmlEntry.setMethod(ZipEntry.DEFLATED);
       out.putNextEntry(htmlEntry); out.write(html); out.closeEntry();
       ZipEntry configEntry = new ZipEntry(CONFIG_ENTRY); configEntry.setTime(AlignedZip.ZIP_TIME); configEntry.setMethod(ZipEntry.DEFLATED);
-      out.putNextEntry(configEntry); out.write(ShellConfigFactory.singleHtml(packageName)); out.closeEntry();
+      out.putNextEntry(configEntry); out.write(ShellConfigFactory.singleHtml(identity)); out.closeEntry();
     } catch (Exception e) { throw new TemplateException(TemplateErrorCode.PATCH_ASSETS_FAILED, "Could not inject HTML into staged APK", e); }
   }
 
