@@ -142,6 +142,7 @@ jobs:
                   val exportDir = File(System.getenv("APK_SMOKE_OUTPUT_DIR") ?: error("APK_SMOKE_OUTPUT_DIR missing"))
                   exportDir.mkdirs()
                   apk.copyTo(File(exportDir, "Manager-HTML-Smoke.apk"), overwrite = true)
+                  Unit
               }
           }
           KOTLIN
