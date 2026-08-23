@@ -94,8 +94,8 @@ jobs:
               fun `real html is converted into an apk containing the source content`() = runBlocking {
                   val context: Context = ApplicationProvider.getApplicationContext()
                   val project = temp.newFolder("manager-html-smoke")
-                  val fixture = File("../overlay-repo/verification/html-smoke/index.html").canonicalFile
-                  assertThat(fixture.exists()).isTrue()
+                  val fixture = File(System.getenv("APK_SMOKE_FIXTURE") ?: error("APK_SMOKE_FIXTURE missing"))
+                  check(fixture.isFile) { "Smoke fixture missing at ${fixture.absolutePath}" }
                   val html = File(project, "index.html")
                   fixture.copyTo(html, overwrite = true)
 
@@ -125,17 +125,17 @@ jobs:
                   val apk = builtDir.listFiles()
                       ?.filter { it.isFile && it.extension.equals("apk", ignoreCase = true) }
                       ?.maxByOrNull { it.lastModified() }
-                  assertThat(apk).isNotNull()
-                  assertThat(apk!!.length()).isGreaterThan(0L)
+                  check(apk != null) { "ApkBuilder produced no APK in ${builtDir.absolutePath}; result=$result" }
+                  check(apk.length() > 0L) { "ApkBuilder produced an empty APK at ${apk.absolutePath}; result=$result" }
 
                   ZipFile(apk).use { zip ->
-                      assertThat(zip.getEntry("AndroidManifest.xml")).isNotNull()
-                      assertThat(zip.getEntry("classes.dex")).isNotNull()
+                      check(zip.getEntry("AndroidManifest.xml") != null) { "Converted APK has no AndroidManifest.xml" }
+                      check(zip.getEntry("classes.dex") != null) { "Converted APK has no classes.dex" }
                       val htmlEntry = zip.entries().asSequence().firstOrNull {
                           it.name.endsWith("/index.html") && it.name.contains("html", ignoreCase = true)
                       }
-                      assertThat(htmlEntry).isNotNull()
-                      val text = zip.getInputStream(htmlEntry!!).bufferedReader().use { it.readText() }
+                      check(htmlEntry != null) { "Converted APK has no embedded HTML index entry" }
+                      val text = zip.getInputStream(htmlEntry).bufferedReader().use { it.readText() }
                       assertThat(text).contains("MANAGER_APK_SMOKE_20260823")
                   }
 
@@ -161,8 +161,20 @@ jobs:
       - name: Run real HTML to APK conversion smoke test
         working-directory: source
         env:
+          APK_SMOKE_FIXTURE: ${{ github.workspace }}/overlay-repo/verification/html-smoke/index.html
           APK_SMOKE_OUTPUT_DIR: ${{ github.workspace }}/smoke-out
         run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest --tests com.webtoapp.core.apkbuilder.ManagerHtmlToApkSmokeTest
+
+      - name: Upload test diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-to-apk-smoke-test-diagnostics
+          path: |
+            source/app/build/test-results/testStandardDebugUnitTest/**
+            source/app/build/reports/tests/testStandardDebugUnitTest/**
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Verify converted APK structure, signature, and embedded HTML
         run: |
