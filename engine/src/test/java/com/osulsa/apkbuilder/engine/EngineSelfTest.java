@@ -21,6 +21,8 @@ public final class EngineSelfTest {
     testImmutableStagingAndHtmlInjection(root);
     testAlignment(root);
     testV1Signing(root);
+    testUnicodeLongNameSigning(root);
+    testTamperDetection(root);
     testFullLocalHtmlBuild(root);
     System.out.println("ENGINE_SELF_TEST_PASS");
   }
@@ -32,6 +34,7 @@ public final class EngineSelfTest {
     expectCode(TemplateErrorCode.TEMPLATE_CONTRACT_INVALID, () -> TemplateContractParser.parse(valid.replace("\"packageSkeleton\":\"com.osulsa.generated\",", "")));
     expectCode(TemplateErrorCode.TEMPLATE_CONTRACT_INVALID, () -> TemplateContractParser.parse(valid.replace("\"capabilities\":[]", "\"capabilities\":[\"root_access\"]")));
     expectCode(TemplateErrorCode.TEMPLATE_CONTRACT_INVALID, () -> TemplateContractParser.parse(valid.substring(0, valid.length()-1) + ",\"unexpected\":true}"));
+    expectCode(TemplateErrorCode.TEMPLATE_CONTRACT_INVALID, () -> TemplateContractParser.parse(valid.replace("\"sha256\":\"" + "0".repeat(64) + "\"", "\"sha256\":null,\"sha256\":\"" + "0".repeat(64) + "\"")));
   }
 
   private static void testValidTemplate(Path root) throws Exception {
@@ -78,13 +81,20 @@ public final class EngineSelfTest {
     require(!staged.equals(apk), "staged path differs");
     Path out = staged.getParent().resolve("generated-unsigned.apk");
     String html = "<!doctype html><title>APK Builder Test</title><h1>works</h1>";
-    ApkHtmlInjector.injectSingleHtml(staged, out, html.getBytes(StandardCharsets.UTF_8));
+    ApkHtmlInjector.injectSingleHtml(staged, out, html.getBytes(StandardCharsets.UTF_8), contract.packageSkeleton());
     ZipAlignmentVerifier.verify(out);
     require(Arrays.equals(original, Files.readAllBytes(apk)), "immutable template unchanged");
     try (ZipFile z = new ZipFile(out.toFile())) {
-      require(z.getEntry("assets/www/index.html") != null, "html entry exists");
-      String got = new String(z.getInputStream(z.getEntry("assets/www/index.html")).readAllBytes(), StandardCharsets.UTF_8);
+      require(z.getEntry("assets/html/index.html") != null, "html entry exists");
+      String got = new String(z.getInputStream(z.getEntry("assets/html/index.html")).readAllBytes(), StandardCharsets.UTF_8);
       require(got.equals(html), "html content matches");
+      ZipEntry configEntry = z.getEntry("assets/app_config.json");
+      require(configEntry != null, "shell config exists");
+      String config = new String(z.getInputStream(configEntry).readAllBytes(), StandardCharsets.UTF_8);
+      require(config.contains("\"appType\":\"HTML\""), "shell config selects HTML app type");
+      require(config.contains("\"siteAssetBase\":\"html\""), "shell config selects html asset base");
+      require(config.contains("\"entryFile\":\"index.html\""), "shell config selects index.html entry");
+      require(config.contains("\"enableNativeBridge\":false"), "native bridge disabled by default");
       require(z.getEntry("META-INF/OLD.RSA") == null, "old signatures stripped");
     }
   }
@@ -96,11 +106,12 @@ public final class EngineSelfTest {
       put(out, "AndroidManifest.xml", "manifest".getBytes(StandardCharsets.UTF_8));
       putStored(out, "resources.arsc", "stored-resource".getBytes(StandardCharsets.UTF_8));
       put(out, "classes.dex", "dex".getBytes(StandardCharsets.UTF_8));
+      putStored(out, "lib/arm64-v8a/libtest.so", "native-lib".getBytes(StandardCharsets.UTF_8));
     }
     TemplateContract contract = TemplateContractParser.parse(contractJson(Hashing.sha256(apk)));
     Path staged = ApkStager.createAttempt(TemplateVerifier.verify(apk, contract, "1.0.0"), root.resolve("align-attempts"));
     Path out = staged.getParent().resolve("aligned.apk");
-    ApkHtmlInjector.injectSingleHtml(staged, out, "<h1>align</h1>".getBytes(StandardCharsets.UTF_8));
+    ApkHtmlInjector.injectSingleHtml(staged, out, "<h1>align</h1>".getBytes(StandardCharsets.UTF_8), contract.packageSkeleton());
     try (ZipFile z = new ZipFile(out.toFile())) { require(z.getEntry("resources.arsc").getMethod() == ZipEntry.STORED, "stored method preserved"); }
     ZipAlignmentVerifier.verify(out);
   }
@@ -117,6 +128,48 @@ public final class EngineSelfTest {
     require(!verifyOut.toLowerCase(Locale.ROOT).contains("unsigned entries"), "payload entries were not signature-covered: " + verifyOut);
     ApkV1Verifier.verify(signed);
     ZipAlignmentVerifier.verify(signed);
+  }
+
+  private static void testUnicodeLongNameSigning(Path root) throws Exception {
+    Path unsigned = root.resolve("unicode-unsigned.apk");
+    String longName = "assets/html/" + "résumé-测试-🚚-".repeat(8) + ".js";
+    try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(unsigned))) {
+      put(out, "AndroidManifest.xml", "manifest".getBytes(StandardCharsets.UTF_8));
+      put(out, "resources.arsc", "resources".getBytes(StandardCharsets.UTF_8));
+      put(out, "classes.dex", "dex".getBytes(StandardCharsets.UTF_8));
+      put(out, longName, "console.log('unicode');".getBytes(StandardCharsets.UTF_8));
+    }
+    SigningMaterial signing = signingMaterial(root.resolve("unicode-key.p12"));
+    Path signed = root.resolve("unicode-signed.apk");
+    V1ApkSigner.sign(unsigned, signed, signing.key(), signing.cert(), "CERT");
+    Process verify = new ProcessBuilder("jarsigner", "-verify", "-verbose", signed.toString()).redirectErrorStream(true).start();
+    String verifyOut = new String(verify.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    require(verify.waitFor() == 0, "unicode jarsigner verification failed: " + verifyOut);
+    require(!verifyOut.toLowerCase(Locale.ROOT).contains("unsigned entries"), "unicode payload not signature-covered: " + verifyOut);
+    ApkV1Verifier.verify(signed);
+  }
+
+  private static void testTamperDetection(Path root) throws Exception {
+    Path unsigned = makeShell(root.resolve("tamper-unsigned.apk"), true);
+    SigningMaterial signing = signingMaterial(root.resolve("tamper-key.p12"));
+    Path signed = root.resolve("tamper-signed.apk");
+    V1ApkSigner.sign(unsigned, signed, signing.key(), signing.cert(), "CERT");
+    Path tampered = root.resolve("tampered.apk");
+    try (ZipFile input = new ZipFile(signed.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(tampered))) {
+      Enumeration<? extends ZipEntry> entries = input.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry e = entries.nextElement();
+        ZipEntry copy = new ZipEntry(e.getName());
+        copy.setTime(e.getTime());
+        out.putNextEntry(copy);
+        if (!e.isDirectory()) {
+          if (e.getName().equals("classes.dex")) out.write("tampered-dex".getBytes(StandardCharsets.UTF_8));
+          else try (InputStream in = input.getInputStream(e)) { in.transferTo(out); }
+        }
+        out.closeEntry();
+      }
+    }
+    expectCode(TemplateErrorCode.SIGNATURE_VERIFY_FAILED, () -> ApkV1Verifier.verify(tampered));
   }
 
 
@@ -151,7 +204,8 @@ public final class EngineSelfTest {
       put(out, "AndroidManifest.xml", "manifest".getBytes(StandardCharsets.UTF_8));
       put(out, "resources.arsc", "resources".getBytes(StandardCharsets.UTF_8));
       if (includeDex) put(out, "classes.dex", "dex".getBytes(StandardCharsets.UTF_8));
-      put(out, "assets/www/index.html", "old".getBytes(StandardCharsets.UTF_8));
+      put(out, "assets/html/index.html", "old".getBytes(StandardCharsets.UTF_8));
+      put(out, "assets/app_config.json", "{\"appType\":\"WEB\"}".getBytes(StandardCharsets.UTF_8));
       put(out, "META-INF/OLD.RSA", "old-signature".getBytes(StandardCharsets.UTF_8));
     }
     return apk;
