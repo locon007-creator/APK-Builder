@@ -195,12 +195,58 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           sha256sum "$APK" | tee smoke-out/Manager-HTML-Smoke.apk.sha256
 
-      - name: Upload conversion proof
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install and launch converted APK on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            set -euxo pipefail
+            APK="$GITHUB_WORKSPACE/smoke-out/Manager-HTML-Smoke.apk"
+            test -s "$APK"
+            AAPT="$ANDROID_HOME/build-tools/36.0.0/aapt"
+            PACKAGE=$($AAPT dump badging "$APK" | awk -F"'" '/^package: name=/{print $2; exit}')
+            test -n "$PACKAGE"
+            echo "APK_RUNTIME_PACKAGE=$PACKAGE"
+            adb install -r "$APK"
+            adb shell pm list packages | grep -F "package:$PACKAGE"
+            adb logcat -c
+            adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+            sleep 6
+            PID=$(adb shell pidof "$PACKAGE" | tr -d '\r')
+            test -n "$PID"
+            echo "APK_RUNTIME_PID=$PID"
+            adb shell dumpsys activity activities > "$GITHUB_WORKSPACE/smoke-out/emulator-activity.txt"
+            grep -F "$PACKAGE" "$GITHUB_WORKSPACE/smoke-out/emulator-activity.txt"
+            adb exec-out screencap -p > "$GITHUB_WORKSPACE/smoke-out/emulator-screen.png"
+            test -s "$GITHUB_WORKSPACE/smoke-out/emulator-screen.png"
+            adb shell uiautomator dump /sdcard/window.xml || true
+            adb pull /sdcard/window.xml "$GITHUB_WORKSPACE/smoke-out/emulator-window.xml" || true
+            adb logcat -d > "$GITHUB_WORKSPACE/smoke-out/emulator-logcat.txt"
+            if grep -E "FATAL EXCEPTION|Process: $PACKAGE" "$GITHUB_WORKSPACE/smoke-out/emulator-logcat.txt"; then
+              echo "Fatal Android runtime error detected" >&2
+              exit 1
+            fi
+
+      - name: Upload conversion and emulator proof
         uses: actions/upload-artifact@v4
         with:
           name: html-to-apk-smoke-proof
           path: |
             smoke-out/Manager-HTML-Smoke.apk
             smoke-out/Manager-HTML-Smoke.apk.sha256
+            smoke-out/emulator-activity.txt
+            smoke-out/emulator-screen.png
+            smoke-out/emulator-window.xml
+            smoke-out/emulator-logcat.txt
           if-no-files-found: error
           retention-days: 14
