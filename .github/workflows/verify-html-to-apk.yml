@@ -1,0 +1,185 @@
+name: Verify HTML to APK smoke
+
+on:
+  push:
+    branches:
+      - verification/html-apk-smoke
+    paths:
+      - "verification/html-smoke/**"
+      - ".github/workflows/verify-html-to-apk.yml"
+      - "overlay/apk-builder.patch"
+      - "scripts/apply-native-features.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  html-to-apk-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out verification branch
+        uses: actions/checkout@v4
+        with:
+          path: overlay-repo
+
+      - name: Clone pinned conversion engine
+        run: |
+          git clone https://github.com/shiaho777/web-to-app.git source
+          git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
+
+      - name: Apply APK Builder recovery overlay
+        run: |
+          git -C source apply --check ../overlay-repo/overlay/apk-builder.patch
+          git -C source apply ../overlay-repo/overlay/apk-builder.patch
+          cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py
+          python3 source/scripts/apply-native-features.py
+
+      - name: Set up Java and Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android build tools
+        run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;28.2.13676358"
+
+      - name: Add manager end-to-end conversion test
+        run: |
+          mkdir -p source/app/src/test/java/com/webtoapp/core/apkbuilder
+          cat > source/app/src/test/java/com/webtoapp/core/apkbuilder/ManagerHtmlToApkSmokeTest.kt <<'KOTLIN'
+          package com.webtoapp.core.apkbuilder
+
+          import android.content.Context
+          import androidx.test.core.app.ApplicationProvider
+          import com.google.common.truth.Truth.assertThat
+          import com.webtoapp.data.model.AppType
+          import com.webtoapp.data.model.HtmlConfig
+          import com.webtoapp.data.model.HtmlFile
+          import com.webtoapp.data.model.HtmlFileType
+          import com.webtoapp.data.model.WebApp
+          import java.io.File
+          import java.util.zip.ZipFile
+          import kotlinx.coroutines.runBlocking
+          import org.junit.Rule
+          import org.junit.Test
+          import org.junit.rules.TemporaryFolder
+          import org.junit.runner.RunWith
+          import org.robolectric.RobolectricTestRunner
+          import org.robolectric.annotation.Config
+
+          @RunWith(RobolectricTestRunner::class)
+          @Config(sdk = [33])
+          class ManagerHtmlToApkSmokeTest {
+              @Rule @JvmField
+              val koinRule = com.webtoapp.util.KoinCleanupRule()
+
+              @get:Rule
+              val temp = TemporaryFolder()
+
+              @Test
+              fun `real html is converted into an apk containing the source content`() = runBlocking {
+                  val context: Context = ApplicationProvider.getApplicationContext()
+                  val project = temp.newFolder("manager-html-smoke")
+                  val fixture = File("../overlay-repo/verification/html-smoke/index.html").canonicalFile
+                  assertThat(fixture.exists()).isTrue()
+                  val html = File(project, "index.html")
+                  fixture.copyTo(html, overwrite = true)
+
+                  val app = WebApp(
+                      name = "Manager HTML Smoke",
+                      url = "",
+                      appType = AppType.HTML,
+                      htmlConfig = HtmlConfig(
+                          entryFile = "index.html",
+                          files = listOf(
+                              HtmlFile("index.html", html.absolutePath, HtmlFileType.HTML)
+                          )
+                      )
+                  )
+
+                  val result = ApkBuilder(context).buildApk(
+                      webApp = app,
+                      forceFullRebuild = true
+                  ) { progress, message ->
+                      println("APK_SMOKE_PROGRESS=$progress $message")
+                  }
+                  println("APK_SMOKE_RESULT=$result")
+
+                  val builtDir = context.getExternalFilesDir(null)
+                      ?.let { File(it, "built_apks") }
+                      ?: File(context.filesDir, "built_apks")
+                  val apk = builtDir.listFiles()
+                      ?.filter { it.isFile && it.extension.equals("apk", ignoreCase = true) }
+                      ?.maxByOrNull { it.lastModified() }
+                  assertThat(apk).isNotNull()
+                  assertThat(apk!!.length()).isGreaterThan(0L)
+
+                  ZipFile(apk).use { zip ->
+                      assertThat(zip.getEntry("AndroidManifest.xml")).isNotNull()
+                      assertThat(zip.getEntry("classes.dex")).isNotNull()
+                      val htmlEntry = zip.entries().asSequence().firstOrNull {
+                          it.name.endsWith("/index.html") && it.name.contains("html", ignoreCase = true)
+                      }
+                      assertThat(htmlEntry).isNotNull()
+                      val text = zip.getInputStream(htmlEntry).bufferedReader().use { it.readText() }
+                      assertThat(text).contains("MANAGER_APK_SMOKE_20260823")
+                  }
+
+                  val exportDir = File(System.getenv("APK_SMOKE_OUTPUT_DIR") ?: error("APK_SMOKE_OUTPUT_DIR missing"))
+                  exportDir.mkdirs()
+                  apk.copyTo(File(exportDir, "Manager-HTML-Smoke.apk"), overwrite = true)
+              }
+          }
+          KOTLIN
+
+      - name: Build APK Builder and generate embedded shell template
+        working-directory: source
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
+
+      - name: Verify APK Builder host artifact
+        run: |
+          HOST_APK=$(find source/app/build/outputs/apk -name "*.apk" -type f | head -1)
+          test -s "$HOST_APK"
+          unzip -Z1 "$HOST_APK" | grep -Fx "assets/template/webview_shell.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$HOST_APK"
+
+      - name: Run real HTML to APK conversion smoke test
+        working-directory: source
+        env:
+          APK_SMOKE_OUTPUT_DIR: ${{ github.workspace }}/smoke-out
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest --tests com.webtoapp.core.apkbuilder.ManagerHtmlToApkSmokeTest
+
+      - name: Verify converted APK structure, signature, and embedded HTML
+        run: |
+          APK=smoke-out/Manager-HTML-Smoke.apk
+          test -s "$APK"
+          unzip -tqq "$APK"
+          unzip -Z1 "$APK" | grep -Fx "AndroidManifest.xml"
+          unzip -Z1 "$APK" | grep -Fx "classes.dex"
+          FOUND=0
+          while IFS= read -r entry; do
+            case "$entry" in
+              *html*/index.html)
+                if unzip -p "$APK" "$entry" | grep -q "MANAGER_APK_SMOKE_20260823"; then FOUND=1; break; fi
+                ;;
+            esac
+          done < <(unzip -Z1 "$APK")
+          test "$FOUND" -eq 1
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
+          sha256sum "$APK" | tee smoke-out/Manager-HTML-Smoke.apk.sha256
+
+      - name: Upload conversion proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-to-apk-smoke-proof
+          path: |
+            smoke-out/Manager-HTML-Smoke.apk
+            smoke-out/Manager-HTML-Smoke.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
