@@ -4,7 +4,12 @@ final class ShellConfigFactory {
   private ShellConfigFactory() {}
 
   static byte[] singleHtml(String packageName) {
+    return singleHtml(packageName, "index.html");
+  }
+
+  static byte[] singleHtml(String packageName, String entryFile) {
     String safePackage = escape(packageName);
+    String safeEntry = escape(entryFile);
     String json = "{" +
         "\"schemaVersion\":1," +
         "\"appName\":\"Generated App\"," +
@@ -30,7 +35,7 @@ final class ShellConfigFactory {
         "\"appType\":\"HTML\"," +
         "\"siteAssetBase\":\"html\"," +
         "\"htmlConfig\":{" +
-          "\"entryFile\":\"index.html\"," +
+          "\"entryFile\":\"" + safeEntry + "\"," +
           "\"enableJavaScript\":true," +
           "\"enableLocalStorage\":true" +
         "}" +
