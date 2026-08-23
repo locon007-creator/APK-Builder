@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://osulsa.local/apk-builder/template-contract.schema.json",
+  "title": "APK Builder Template Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "templateVersion",
+    "templateFile",
+    "sha256",
+    "minimumBuilderVersion",
+    "requiredEntries",
+    "capabilities"
+  ],
+  "properties": {
+    "contractVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "templateVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "templateFile": {
+      "type": "string",
+      "const": "template/webview_shell.apk"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "minimumBuilderVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packageSkeleton": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredEntries": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "allOf": [
+        {"contains": {"const": "AndroidManifest.xml"}},
+        {"contains": {"const": "resources.arsc"}},
+        {"contains": {"const": "classes.dex"}}
+      ]
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "notifications",
+          "reminders",
+          "background_work",
+          "location",
+          "camera",
+          "microphone",
+          "bluetooth",
+          "file_media_access",
+          "vibration"
+        ]
+      }
+    }
+  }
+}
