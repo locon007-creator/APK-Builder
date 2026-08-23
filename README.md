@@ -24,4 +24,19 @@ This repository has been reset to a clean development foundation.
 6. On-device APK packaging and signing.
 7. Verification screen with build progress, errors and final APK output.
 
+## Current implementation gate
+
+Do not build later workflow/UI layers until the local template path is dependable.
+
+The first implementation milestone is the Template Engine V1 contract in `docs/TEMPLATE_ENGINE_V1.md`:
+
+- bundle the known-good shell inside APK Builder;
+- verify its version, SHA-256 and APK structure before every build;
+- copy it into isolated app-private staging;
+- never download or silently substitute a template during a build;
+- align before signing and verify the finished APK;
+- keep privileged native bridges limited to trusted app-owned content.
+
+The release-quality scenarios are defined in `docs/ACCEPTANCE_CONTRACT.md`. The template metadata format is defined by `docs/template-contract.schema.json`.
+
 GitHub is source storage only. It must not automatically build, retry, or send CI failure email traffic.
