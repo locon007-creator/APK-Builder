@@ -21,6 +21,7 @@ public final class TemplateContractParser {
       for (Map.Entry<?, ?> e : raw.entrySet()) {
         if (!(e.getKey() instanceof String key)) throw invalid("Contract key must be a string");
         if (!KEYS.contains(key)) throw invalid("Unknown contract field: " + key);
+        if (map.containsKey(key)) throw invalid("Duplicate contract field: " + key);
         map.put(key, e.getValue());
       }
       for (String key : KEYS) if (!map.containsKey(key)) throw invalid("Missing contract field: " + key);
@@ -87,7 +88,7 @@ public final class TemplateContractParser {
     }
     private Map<String,Object> object() {
       expect('{'); ws(); Map<String,Object> m = new LinkedHashMap<>(); if (take('}')) return m;
-      while (true) { ws(); String k = string(); ws(); expect(':'); Object v = value(); if (m.put(k,v) != null) fail(); ws(); if (take('}')) return m; expect(','); }
+      while (true) { ws(); String k = string(); ws(); expect(':'); Object v = value(); if (m.containsKey(k)) fail(); m.put(k,v); ws(); if (take('}')) return m; expect(','); }
     }
     private List<Object> array() {
       expect('['); ws(); List<Object> a = new ArrayList<>(); if (take(']')) return a;
