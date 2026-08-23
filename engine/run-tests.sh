@@ -10,3 +10,4 @@ rm -f "$ROOT/.sources"
 java -cp "$OUT" com.osulsa.apkbuilder.engine.EngineSelfTest
 java -cp "$OUT" com.osulsa.apkbuilder.engine.ProjectArchiveSelfTest
 java -cp "$OUT" com.osulsa.apkbuilder.engine.ApkProjectInjectorSelfTest
+java -cp "$OUT" com.osulsa.apkbuilder.engine.LocalZipBuildEngineSelfTest
