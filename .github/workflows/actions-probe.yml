@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
 
+# Verification-only workflow used to confirm that GitHub Actions is executing in this repository.
 jobs:
   probe:
     runs-on: ubuntu-latest
