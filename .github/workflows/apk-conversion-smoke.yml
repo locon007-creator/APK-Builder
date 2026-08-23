@@ -1,0 +1,214 @@
+name: APK Conversion Smoke Test
+
+on:
+  push:
+    branches:
+      - manager/apk-conversion-smoke
+    paths:
+      - ".github/workflows/apk-conversion-smoke.yml"
+  pull_request:
+    branches:
+      - manager/apk4-verified-reference
+    paths:
+      - ".github/workflows/apk-conversion-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# This branch is verification-only; it never replaces the clean main implementation foundation.
+jobs:
+  html-to-apk-end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out recovered APK Builder overlay
+        uses: actions/checkout@v4
+        with:
+          path: overlay-repo
+
+      - name: Clone pinned conversion engine
+        run: |
+          git clone https://github.com/shiaho777/web-to-app.git source
+          git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
+
+      - name: Apply APK Builder 4.0 overlay
+        run: |
+          git -C source apply --check ../overlay-repo/overlay/apk-builder.patch
+          git -C source apply ../overlay-repo/overlay/apk-builder.patch
+          cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py
+          python3 source/scripts/apply-native-features.py
+
+      - name: Add end-to-end HTML conversion instrumentation test
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          gradle = Path("source/app/build.gradle.kts")
+          text = gradle.read_text(encoding="utf-8")
+          anchor = "    defaultConfig {\n"
+          if anchor not in text:
+              raise SystemExit("defaultConfig anchor not found")
+          text = text.replace(
+              anchor,
+              anchor + '        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"\n',
+              1,
+          )
+          gradle.write_text(text, encoding="utf-8")
+          PY
+          mkdir -p source/app/src/androidTest/java/com/webtoapp/core/apkbuilder
+          cat > source/app/src/androidTest/java/com/webtoapp/core/apkbuilder/HtmlToApkSmokeTest.kt <<'KOTLIN'
+          package com.webtoapp.core.apkbuilder
+
+          import androidx.test.ext.junit.runners.AndroidJUnit4
+          import androidx.test.platform.app.InstrumentationRegistry
+          import com.webtoapp.data.model.AppType
+          import com.webtoapp.data.model.HtmlConfig
+          import com.webtoapp.data.model.HtmlFile
+          import com.webtoapp.data.model.HtmlFileType
+          import com.webtoapp.data.model.WebApp
+          import kotlinx.coroutines.runBlocking
+          import org.junit.Assert.assertTrue
+          import org.junit.Test
+          import org.junit.runner.RunWith
+          import java.io.File
+
+          @RunWith(AndroidJUnit4::class)
+          class HtmlToApkSmokeTest {
+              @Test
+              fun convertsRealHtmlIntoSignedApk() = runBlocking {
+                  val context = InstrumentationRegistry.getInstrumentation().targetContext
+                  val html = File(context.cacheDir, "manager-smoke-index.html").apply {
+                      writeText(
+                          """<!doctype html>
+                          <html lang="en">
+                          <head>
+                            <meta charset="utf-8">
+                            <meta name="viewport" content="width=device-width,initial-scale=1">
+                            <title>APK Builder conversion passed</title>
+                          </head>
+                          <body>
+                            <main>
+                              <h1>APK Builder conversion passed</h1>
+                              <p id="proof">This page came from the HTML fixture embedded by the converter.</p>
+                            </main>
+                          </body>
+                          </html>""".trimIndent()
+                      )
+                  }
+
+                  val app = WebApp(
+                      name = "Manager Smoke",
+                      url = "",
+                      appType = AppType.HTML,
+                      htmlConfig = HtmlConfig(
+                          projectId = "manager-smoke",
+                          entryFile = "index.html",
+                          files = listOf(
+                              HtmlFile(
+                                  name = "index.html",
+                                  path = html.absolutePath,
+                                  type = HtmlFileType.HTML,
+                              )
+                          ),
+                      ),
+                  )
+
+                  val result = ApkBuilder(context).buildApk(
+                      webApp = app,
+                      forceFullRebuild = true,
+                  )
+
+                  assertTrue("Conversion failed: $result", result is BuildResult.Success)
+                  val generated = (result as BuildResult.Success).apkFile
+                  assertTrue("Generated APK is missing", generated.isFile)
+                  assertTrue("Generated APK is empty", generated.length() > 1024)
+
+                  generated.copyTo(
+                      target = File(context.filesDir, "generated-smoke.apk"),
+                      overwrite = true,
+                  )
+              }
+          }
+          KOTLIN
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android build dependencies
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;28.2.13676358"
+
+      - name: Build dedicated shell template and APK Builder test APKs
+        working-directory: source
+        run: |
+          ./gradlew --no-daemon --no-configuration-cache \
+            -Dkotlin.compiler.execution.strategy=in-process \
+            -PallowDebugSignedRelease=true \
+            :shell:assembleRelease \
+            :app:assembleStandardDebug \
+            :app:assembleStandardDebugAndroidTest
+
+      - name: Convert HTML, extract generated APK, install it, and launch it
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            cd source
+            ./gradlew --no-daemon --no-configuration-cache \
+              -Dkotlin.compiler.execution.strategy=in-process \
+              -PallowDebugSignedRelease=true \
+              :app:connectedStandardDebugAndroidTest
+            cd ..
+
+            adb exec-out run-as com.locon007.apkbuilder cat files/generated-smoke.apk > generated-smoke.apk
+            test -s generated-smoke.apk
+            unzip -tqq generated-smoke.apk
+            "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs generated-smoke.apk | tee generated-smoke-signature.txt
+
+            PKG=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging generated-smoke.apk | sed -n "s/package: name='\([^']*\)'.*/\1/p")
+            test -n "$PKG"
+            printf 'generated_package=%s\n' "$PKG" | tee generated-smoke-package.txt
+
+            adb install -r generated-smoke.apk
+            adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
+            sleep 5
+            adb shell pidof "$PKG" | tee generated-smoke-pid.txt
+            test -s generated-smoke-pid.txt
+
+            adb shell uiautomator dump /sdcard/generated-smoke-window.xml || true
+            adb pull /sdcard/generated-smoke-window.xml generated-smoke-window.xml || true
+            adb exec-out screencap -p > generated-smoke.png
+
+            if grep -q "APK Builder conversion passed" generated-smoke-window.xml 2>/dev/null; then
+              echo "rendered_html_text_visible=true" | tee generated-smoke-render.txt
+            else
+              echo "rendered_html_text_visible=not_exposed_by_uiautomator" | tee generated-smoke-render.txt
+            fi
+
+            sha256sum generated-smoke.apk | tee generated-smoke.apk.sha256
+
+      - name: Upload conversion evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-to-apk-smoke-evidence
+          if-no-files-found: error
+          path: |
+            generated-smoke.apk
+            generated-smoke.apk.sha256
+            generated-smoke-signature.txt
+            generated-smoke-package.txt
+            generated-smoke-pid.txt
+            generated-smoke-render.txt
+            generated-smoke-window.xml
+            generated-smoke.png
