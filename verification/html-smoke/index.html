@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>APK Builder Smoke Test</title>
+  <style>body{font-family:system-ui,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#111;color:#fff}.card{max-width:32rem;padding:2rem}button{font:inherit;padding:.75rem 1rem}</style>
+</head>
+<body>
+  <main class="card">
+    <h1>APK Builder Smoke Test</h1>
+    <p id="sentinel">MANAGER_APK_SMOKE_20260823</p>
+    <button id="btn" type="button">Test JavaScript</button>
+    <p id="status">Ready</p>
+  </main>
+  <script>document.getElementById('btn').addEventListener('click',()=>{document.getElementById('status').textContent='JavaScript works';});</script>
+</body>
+</html>
