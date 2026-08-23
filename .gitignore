@@ -1,4 +1,5 @@
 *.apk
+!template/webview_shell.apk
 *.aab
 *.jks
 *.keystore
