@@ -25,6 +25,7 @@ public final class EngineSelfTest {
     System.out.println("ENGINE_SELF_TEST_PASS");
   }
 
+
   private static void testContractValidation() throws Exception {
     String valid = contractJson("0".repeat(64));
     TemplateContractParser.parse(valid);
@@ -53,6 +54,7 @@ public final class EngineSelfTest {
     TemplateContract contract = TemplateContractParser.parse(contractJson(Hashing.sha256(apk)));
     expectCode(TemplateErrorCode.TEMPLATE_CORRUPT, () -> TemplateVerifier.verify(apk, contract, "1.0.0"));
   }
+
 
   private static void testIncompatibleVersion(Path root) throws Exception {
     Path apk = makeShell(root.resolve("incompatible.apk"), true);
@@ -87,6 +89,7 @@ public final class EngineSelfTest {
     }
   }
 
+
   private static void testAlignment(Path root) throws Exception {
     Path apk = root.resolve("stored.apk");
     try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(apk))) {
@@ -115,6 +118,7 @@ public final class EngineSelfTest {
     ApkV1Verifier.verify(signed);
     ZipAlignmentVerifier.verify(signed);
   }
+
 
   private static void testFullLocalHtmlBuild(Path root) throws Exception {
     Path template = makeShell(root.resolve("full-template.apk"), true);
@@ -156,6 +160,7 @@ public final class EngineSelfTest {
   private static void put(ZipOutputStream out, String name, byte[] data) throws Exception {
     ZipEntry e = new ZipEntry(name); out.putNextEntry(e); out.write(data); out.closeEntry();
   }
+
 
   private static void putStored(ZipOutputStream out, String name, byte[] data) throws Exception {
     CRC32 crc = new CRC32(); crc.update(data); ZipEntry e = new ZipEntry(name); e.setMethod(ZipEntry.STORED); e.setSize(data.length); e.setCompressedSize(data.length); e.setCrc(crc.getValue()); out.putNextEntry(e); out.write(data); out.closeEntry();
