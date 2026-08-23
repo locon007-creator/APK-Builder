@@ -6,7 +6,6 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -31,7 +30,7 @@ public final class LocalHtmlBuildEngine {
       Path attempt = staged.getParent();
       Path unsigned = attempt.resolve("generated-unsigned.apk");
       Path signed = attempt.resolve("generated-signed.apk");
-      ApkHtmlInjector.injectSingleHtml(staged, unsigned, html);
+      ApkHtmlInjector.injectSingleHtml(staged, unsigned, html, contract.packageSkeleton());
       ZipAlignmentVerifier.verify(unsigned);
       V1ApkSigner.sign(unsigned, signed, signingKey, signingCertificate, "CERT");
       ZipAlignmentVerifier.verify(signed);
@@ -58,7 +57,7 @@ public final class LocalHtmlBuildEngine {
   private static void verifyPayload(Path signed, byte[] expectedHtml, TemplateContract contract) throws Exception {
     try (ZipFile zip = new ZipFile(signed.toFile())) {
       for (String required : contract.requiredEntries()) if (zip.getEntry(required) == null) throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Output missing " + required);
-      ZipEntry html = zip.getEntry("assets/www/index.html");
+      ZipEntry html = zip.getEntry("assets/html/index.html");
       if (html == null) throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Output missing HTML entry point");
       byte[] actual; try (InputStream in = zip.getInputStream(html)) { actual = in.readAllBytes(); }
       if (!Arrays.equals(actual, expectedHtml)) throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Output HTML differs from input");
