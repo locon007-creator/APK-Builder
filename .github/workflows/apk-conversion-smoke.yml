@@ -16,6 +16,7 @@ on:
 permissions:
   contents: read
 
+# This branch is verification-only; it never replaces the clean main implementation foundation.
 jobs:
   html-to-apk-end-to-end:
     runs-on: ubuntu-latest
