@@ -6,6 +6,11 @@ on:
       - manager/apk-conversion-smoke
     paths:
       - ".github/workflows/apk-conversion-smoke.yml"
+  pull_request:
+    branches:
+      - recovery/apk-builder-4.0-verified
+    paths:
+      - ".github/workflows/apk-conversion-smoke.yml"
   workflow_dispatch:
 
 permissions:
