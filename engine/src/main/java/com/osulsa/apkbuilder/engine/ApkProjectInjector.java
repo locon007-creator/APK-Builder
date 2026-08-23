@@ -16,6 +16,16 @@ public final class ApkProjectInjector {
       Path projectRoot,
       String entryFile,
       String packageName) throws TemplateException {
+    injectProject(stagedApk, outputApk, projectRoot, entryFile,
+        new AppIdentity("Generated App", packageName, 1, "1.0.0"));
+  }
+
+  public static void injectProject(
+      Path stagedApk,
+      Path outputApk,
+      Path projectRoot,
+      String entryFile,
+      AppIdentity identity) throws TemplateException {
     if (projectRoot == null || !Files.isDirectory(projectRoot)) {
       throw patch("Project directory is missing");
     }
@@ -57,7 +67,7 @@ public final class ApkProjectInjector {
       config.setTime(AlignedZip.ZIP_TIME);
       config.setMethod(ZipEntry.DEFLATED);
       out.putNextEntry(config);
-      out.write(ShellConfigFactory.singleHtml(packageName, entryFile));
+      out.write(ShellConfigFactory.singleHtml(identity, entryFile));
       out.closeEntry();
     } catch (Exception e) {
       throw new TemplateException(TemplateErrorCode.PATCH_ASSETS_FAILED, "Could not inject project into staged APK", e);
