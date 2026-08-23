@@ -38,10 +38,11 @@ public final class LocalHtmlBuildEngine {
       verifyPayload(signed, html, contract);
       String sourceAfter = Hashing.sha256(templateApk);
       if (!sourceBefore.equals(sourceAfter)) throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Immutable bundled template changed during build");
-      Files.createDirectories(verifiedOutput.toAbsolutePath().getParent());
-      Files.copy(signed, verifiedOutput, StandardCopyOption.REPLACE_EXISTING);
-      ApkV1Verifier.verify(verifiedOutput);
-      ZipAlignmentVerifier.verify(verifiedOutput);
+      AtomicApkPublisher.publish(signed, verifiedOutput, candidate -> {
+        ApkV1Verifier.verify(candidate);
+        ZipAlignmentVerifier.verify(candidate);
+        verifyPayload(candidate, html, contract);
+      });
       String outputHash = Hashing.sha256(verifiedOutput);
       String inputHash = Hashing.hex(Hashing.sha256(html));
       String certHash = Hashing.hex(Hashing.sha256(signingCertificate.getEncoded()));
