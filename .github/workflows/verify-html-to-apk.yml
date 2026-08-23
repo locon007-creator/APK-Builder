@@ -9,6 +9,14 @@ on:
       - ".github/workflows/verify-html-to-apk.yml"
       - "overlay/apk-builder.patch"
       - "scripts/apply-native-features.py"
+  pull_request:
+    branches:
+      - recovery/apk-builder-4.0-verified
+    paths:
+      - "verification/html-smoke/**"
+      - ".github/workflows/verify-html-to-apk.yml"
+      - "overlay/apk-builder.patch"
+      - "scripts/apply-native-features.py"
   workflow_dispatch:
 
 permissions:
@@ -127,7 +135,7 @@ jobs:
                           it.name.endsWith("/index.html") && it.name.contains("html", ignoreCase = true)
                       }
                       assertThat(htmlEntry).isNotNull()
-                      val text = zip.getInputStream(htmlEntry).bufferedReader().use { it.readText() }
+                      val text = zip.getInputStream(htmlEntry!!).bufferedReader().use { it.readText() }
                       assertThat(text).contains("MANAGER_APK_SMOKE_20260823")
                   }
 
