@@ -20,7 +20,9 @@ APP_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SHELL_ROOT = REPO_ROOT / "android-shell"
-WEB_ROOT = SHELL_ROOT / "app" / "src" / "main" / "assets" / "www"
+WORK_ROOT = REPO_ROOT / ".work"
+ASSETS_ROOT = WORK_ROOT / "generated-assets"
+WEB_ROOT = ASSETS_ROOT / "www"
 DIST_ROOT = REPO_ROOT / "dist"
 
 
@@ -105,8 +107,8 @@ def choose_entry_root(extracted: Path, requested_entry: str | None) -> Path:
 
 
 def reset_web_root() -> None:
-    if WEB_ROOT.exists():
-        shutil.rmtree(WEB_ROOT)
+    if ASSETS_ROOT.exists():
+        shutil.rmtree(ASSETS_ROOT)
     WEB_ROOT.mkdir(parents=True, exist_ok=True)
 
 
@@ -200,6 +202,7 @@ def build_debug_apk(args: argparse.Namespace) -> Path:
         f"-PAPP_NAME={args.name}",
         f"-PVERSION_NAME={args.version_name}",
         f"-PVERSION_CODE={args.version_code}",
+        f"-PWEB_ASSETS_DIR={ASSETS_ROOT.resolve()}",
     ]
     print("Running Android SDK build...")
     subprocess.run(command, cwd=SHELL_ROOT, check=True)
@@ -221,7 +224,7 @@ def main() -> None:
 
     print(f"Importing {source.name}...")
     import_project(source, args.entry)
-    print(f"Prepared web project at: {WEB_ROOT}")
+    print(f"Prepared isolated web project at: {WEB_ROOT}")
 
     if args.prepare_only:
         print("Prepare-only complete. No APK build was started.")
