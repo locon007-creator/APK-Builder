@@ -6,6 +6,7 @@ val generatedAppId = providers.gradleProperty("APP_ID").orElse("com.apkbuilder.g
 val generatedAppName = providers.gradleProperty("APP_NAME").orElse("Generated App")
 val generatedVersionName = providers.gradleProperty("VERSION_NAME").orElse("1.0")
 val generatedVersionCode = providers.gradleProperty("VERSION_CODE").orElse("1")
+val generatedAssetsDir = providers.gradleProperty("WEB_ASSETS_DIR")
 
 android {
     namespace = "com.apkbuilder.shell"
@@ -18,6 +19,10 @@ android {
         versionCode = generatedVersionCode.get().toInt()
         versionName = generatedVersionName.get()
         manifestPlaceholders["appLabel"] = generatedAppName.get()
+    }
+
+    if (generatedAssetsDir.isPresent) {
+        sourceSets.getByName("main").assets.setSrcDirs(listOf(file(generatedAssetsDir.get())))
     }
 
     compileOptions {
