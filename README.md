@@ -14,9 +14,9 @@ This repository has been reset to a clean development foundation.
 - Notifications, reminders, location, camera, microphone, Bluetooth, file/media access, vibration and background behavior are handled through explicit Android permissions/native bridges.
 - Dangerous permissions are never blanket-enabled.
 
-## Android SDK shell — first working source milestone
+## Android SDK shell — first source milestone
 
-The repository now includes `android-shell/`, a real Android SDK project that can package web content inside a native Android app shell.
+The repository now includes `android-shell/`, a real Android SDK source project designed to package web content inside a native Android app shell.
 
 Current baseline:
 
@@ -27,7 +27,7 @@ Current baseline:
 - Android Build Tools 36.0.0;
 - minimum Android API 26.
 
-`tools/package_web.py` accepts a self-contained HTML file or ZIP web project, validates the import, stages it in an isolated `.work/` directory, passes app name/package/version values into Gradle, and builds a debug-signed APK into `dist/` when the required local Android toolchain is installed.
+`tools/package_web.py` accepts a self-contained HTML file or ZIP web project, validates the import, stages it in an isolated `.work/` directory, passes app name/package/version values into Gradle, and is configured to build a debug-signed APK into `dist/` when the required local Android toolchain is installed.
 
 Example:
 
@@ -35,7 +35,9 @@ Example:
 python tools/package_web.py app.zip --name "My App" --id com.example.myapp
 ```
 
-The generated shell loads packaged content from a private HTTPS-style `https://app.local/` origin. It does not use permissive `file://` access and does not expose a privileged JavaScript bridge in this milestone. External navigation leaves the trusted local content context.
+The generated shell is designed to load packaged content from a private HTTPS-style `https://app.local/` origin. It does not use permissive `file://` access and does not expose a privileged JavaScript bridge in this milestone. External navigation leaves the trusted local content context.
+
+The HTML/ZIP importer has local unit coverage, but an Android SDK compile/install test is still required before this milestone can be called a verified APK build path.
 
 Release signing, icon/splash replacement, the permission engine, capability injection, and the final on-device builder UI remain later milestones and must follow the acceptance contract.
 
