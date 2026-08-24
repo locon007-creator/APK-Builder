@@ -16,7 +16,7 @@ The project intentionally uses only platform Android APIs. There is no AndroidX 
 
 ## Security model
 
-Packaged web content loads from `https://app.local/` through `WebViewClient.shouldInterceptRequest`. The shell does not use `file://` access and does not expose a JavaScript bridge. External navigation opens outside the trusted local app context.
+Packaged web content is designed to load from `https://app.local/` through `WebViewClient.shouldInterceptRequest`. The shell does not use `file://` access and does not expose a JavaScript bridge. External navigation opens outside the trusted local app context.
 
 Only the normal `INTERNET` permission is present in this milestone. Dangerous permissions and native bridges must be added only through approved capability work.
 
@@ -40,6 +40,6 @@ python tools/package_web.py /path/to/index.html \
   --id com.example.myapp
 ```
 
-The importer stages project files under `.work/`, then Gradle builds against that isolated asset directory. The tracked placeholder under `app/src/main/assets/www/` stays unchanged.
+The importer stages project files under `.work/`, then Gradle is configured to build against that isolated asset directory. The tracked placeholder under `app/src/main/assets/www/` stays unchanged.
 
-The current command creates a debug-signed installable APK in `dist/`. Release signing is intentionally deferred until the signing-key workflow is implemented and verified.
+The command is configured to create a debug-signed installable APK in `dist/`. The HTML/ZIP importer tests pass locally, but the Android shell still requires an Android SDK compile/install verification before the APK path is considered verified. Release signing is intentionally deferred until the signing-key workflow is implemented and verified.
