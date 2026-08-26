@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "overlay/apk-builder.patch"
+      - "overlay/hide-browser-toolbar.patch"
       - "scripts/apply-native-features.py"
       - ".github/workflows/build-apk-builder.yml"
   workflow_dispatch:
@@ -21,6 +22,8 @@ jobs:
         run: git clone https://github.com/shiaho777/web-to-app.git source && git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
       - name: Apply APK Builder wizard
         run: git -C source apply --check ../overlay-repo/overlay/apk-builder.patch && git -C source apply ../overlay-repo/overlay/apk-builder.patch
+      - name: Hide browser chrome in generated apps
+        run: git -C source apply --check ../overlay-repo/overlay/hide-browser-toolbar.patch && git -C source apply ../overlay-repo/overlay/hide-browser-toolbar.patch
       - name: Apply APK Builder 4 native features
         run: cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py && python3 source/scripts/apply-native-features.py
       - uses: actions/setup-java@v4
