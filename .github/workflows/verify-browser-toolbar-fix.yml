@@ -1,0 +1,71 @@
+name: Verify generated app browser chrome fix
+
+on:
+  push:
+    branches:
+      - fix/hide-generated-browser-toolbar
+    paths:
+      - "overlay/apk-builder.patch"
+      - "overlay/hide-browser-toolbar.patch"
+      - "scripts/apply-native-features.py"
+      - ".github/workflows/verify-browser-toolbar-fix.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: overlay-repo
+
+      - name: Clone pinned conversion engine
+        run: git clone https://github.com/shiaho777/web-to-app.git source && git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
+
+      - name: Apply APK Builder wizard
+        run: git -C source apply --check ../overlay-repo/overlay/apk-builder.patch && git -C source apply ../overlay-repo/overlay/apk-builder.patch
+
+      - name: Apply browser toolbar fix
+        run: git -C source apply --check ../overlay-repo/overlay/hide-browser-toolbar.patch && git -C source apply ../overlay-repo/overlay/hide-browser-toolbar.patch
+
+      - name: Apply APK Builder native features
+        run: cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py && python3 source/scripts/apply-native-features.py
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android build tools
+        run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;28.2.13676358"
+
+      - name: Run toolbar regression test and unit suite
+        working-directory: source
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
+
+      - name: Build APK Builder candidate
+        working-directory: source
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
+
+      - name: Verify candidate APK
+        run: |
+          APK=$(find source/app/build/outputs/apk -name "*.apk" -type f | head -1)
+          test -s "$APK"
+          unzip -tqq "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
+          cp "$APK" APK-Builder-toolbar-fix.apk
+          sha256sum APK-Builder-toolbar-fix.apk > APK-Builder-toolbar-fix.apk.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APK-Builder-toolbar-fix
+          path: |
+            APK-Builder-toolbar-fix.apk
+            APK-Builder-toolbar-fix.apk.sha256
+          if-no-files-found: error
