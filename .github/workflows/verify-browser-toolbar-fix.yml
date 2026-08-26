@@ -9,6 +9,15 @@ on:
       - "overlay/hide-browser-toolbar.patch"
       - "scripts/apply-native-features.py"
       - ".github/workflows/verify-browser-toolbar-fix.yml"
+  pull_request:
+    branches:
+      - manager/apk4-verified-reference
+    paths:
+      - "overlay/apk-builder.patch"
+      - "overlay/hide-browser-toolbar.patch"
+      - "scripts/apply-native-features.py"
+      - ".github/workflows/build-apk-builder.yml"
+      - ".github/workflows/verify-browser-toolbar-fix.yml"
 
 permissions:
   contents: read
