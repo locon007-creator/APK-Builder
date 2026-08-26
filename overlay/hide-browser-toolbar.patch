@@ -1,0 +1,65 @@
+diff --git a/app/src/main/java/com/webtoapp/data/model/WebApp.kt b/app/src/main/java/com/webtoapp/data/model/WebApp.kt
+--- a/app/src/main/java/com/webtoapp/data/model/WebApp.kt
++++ b/app/src/main/java/com/webtoapp/data/model/WebApp.kt
+@@ -250,13 +250,13 @@ data class WebViewConfig(
+     val downloadLocationMode: DownloadLocationMode = DownloadLocationMode.SYSTEM_DOWNLOAD,
+     val customDownloadDirUri: String = "",
+     val openExternalLinks: Boolean = false,
+-    val hideBrowserToolbar: Boolean = false,
+-    val toolbarShowTitle: Boolean = true,
+-    val toolbarShowUrl: Boolean = true,
+-    val toolbarShowBack: Boolean = true,
+-    val toolbarShowForward: Boolean = true,
+-    val toolbarShowRefresh: Boolean = true,
+-    val browserToolbarCustomized: Boolean = false,
++    val hideBrowserToolbar: Boolean = true,
++    val toolbarShowTitle: Boolean = false,
++    val toolbarShowUrl: Boolean = false,
++    val toolbarShowBack: Boolean = false,
++    val toolbarShowForward: Boolean = false,
++    val toolbarShowRefresh: Boolean = false,
++    val browserToolbarCustomized: Boolean = true,
+     val hideToolbar: Boolean = false,
+     val showStatusBarInFullscreen: Boolean = false,
+     val showNavigationBarInFullscreen: Boolean = false,
+diff --git a/app/src/test/java/com/webtoapp/data/model/ApkBuilderGeneratedAppDefaultsTest.kt b/app/src/test/java/com/webtoapp/data/model/ApkBuilderGeneratedAppDefaultsTest.kt
+new file mode 100644
+--- /dev/null
++++ b/app/src/test/java/com/webtoapp/data/model/ApkBuilderGeneratedAppDefaultsTest.kt
+@@ -0,0 +1,42 @@
++package com.webtoapp.data.model
++
++import com.google.common.truth.Truth.assertThat
++import org.junit.Test
++
++class ApkBuilderGeneratedAppDefaultsTest {
++    @Test
++    fun `new generated apps hide browser chrome by default`() {
++        val config = WebViewConfig()
++        val visibility = resolveToolbarButtons(
++            hideBrowserToolbar = config.hideBrowserToolbar,
++            browserToolbarCustomized = config.browserToolbarCustomized,
++            toolbarShowTitle = config.toolbarShowTitle,
++            toolbarShowUrl = config.toolbarShowUrl,
++            toolbarShowBack = config.toolbarShowBack,
++            toolbarShowForward = config.toolbarShowForward,
++            toolbarShowRefresh = config.toolbarShowRefresh,
++        )
++
++        assertThat(config.hideBrowserToolbar).isTrue()
++        assertThat(config.browserToolbarCustomized).isTrue()
++        assertThat(config.toolbarShowTitle).isFalse()
++        assertThat(config.toolbarShowUrl).isFalse()
++        assertThat(config.toolbarShowBack).isFalse()
++        assertThat(config.toolbarShowForward).isFalse()
++        assertThat(config.toolbarShowRefresh).isFalse()
++
++        assertThat(visibility.showTitle).isFalse()
++        assertThat(visibility.showUrl).isFalse()
++        assertThat(visibility.showBack).isFalse()
++        assertThat(visibility.showForward).isFalse()
++        assertThat(visibility.showRefresh).isFalse()
++        assertThat(visibility.showConsoleButton).isFalse()
++        assertThat(visibility.showOverflowButton).isFalse()
++    }
++}
