@@ -1,0 +1,99 @@
+name: APK Builder 5 one-time host build
+
+on:
+  push:
+    branches:
+      - apkbuilder-permanent-reset
+    paths:
+      - .github/BUILD_PERMANENT_RESET_ONCE
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout isolated build branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Test local engine
+        run: sh engine/run-tests.sh
+
+      - name: Recover proven APK Builder host overlay
+        run: |
+          git show 9aab10bbbf3d11e0f1b9521896256f833b6c828c:overlay/apk-builder.patch > /tmp/apk-builder.patch
+          git show 9aab10bbbf3d11e0f1b9521896256f833b6c828c:scripts/apply-native-features.py > /tmp/apply-native-features.py
+
+      - name: Clone pinned Android host source
+        run: |
+          git clone https://github.com/shiaho777/web-to-app.git source
+          git -C source checkout 8870ee293dbb89f5293c49c3f25e767f3a996e1c
+          git -C source apply --check /tmp/apk-builder.patch
+          git -C source apply /tmp/apk-builder.patch
+          cp /tmp/apply-native-features.py source/scripts/apply-native-features.py
+          python3 source/scripts/apply-native-features.py
+
+      - name: Inject tested update engine
+        run: |
+          mkdir -p source/app/src/main/java/com/osulsa/apkbuilder/engine
+          cp engine/src/main/java/com/osulsa/apkbuilder/engine/*.java source/app/src/main/java/com/osulsa/apkbuilder/engine/
+          rm -f source/app/src/main/java/com/osulsa/apkbuilder/engine/LocalZipBuildEngine.java.tmp
+          rm -f source/app/src/main/java/com/osulsa/apkbuilder/engine/LocalZipBuildEngine2.java
+          rm -f source/app/src/main/java/com/osulsa/apkbuilder/engine/LocalZipBuildEngine3.java
+          python3 scripts/fix-existing-apk-update-script.py scripts/apply-existing-apk-update.py
+          python3 scripts/apply-existing-apk-update.py source
+          grep -F 'Update Existing APK' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+          grep -F 'ExistingApkWebUpdater.prepareUnsigned' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
+          grep -F 'versionCode = 500' source/app/build.gradle.kts
+
+      - name: Install Android build tools
+        run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'cmake;3.22.1' 'ndk;28.2.13676358'
+
+      - name: Run Android unit tests
+        working-directory: source
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PskipShellTemplateSync=true -PallowDebugSignedRelease=true :app:testStandardDebugUnitTest :app:checkConfigFieldDrift
+
+      - name: Build Android host APK
+        working-directory: source
+        run: ./gradlew --no-daemon --no-configuration-cache -Dkotlin.compiler.execution.strategy=in-process -PallowDebugSignedRelease=true :app:assembleStandardDebug
+
+      - name: Verify host and embedded shell
+        run: |
+          APK=$(find source/app/build/outputs/apk -name '*.apk' -type f | head -1)
+          test -s "$APK"
+          unzip -Z1 "$APK" | grep -Fx 'assets/template/webview_shell.apk'
+          unzip -p "$APK" assets/template/webview_shell.apk > webview_shell.apk
+          test -s webview_shell.apk
+          unzip -tqq webview_shell.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
+          cp "$APK" APK-Builder-5.0.0-debug.apk
+          sha256sum APK-Builder-5.0.0-debug.apk > APK-Builder-5.0.0-debug.apk.sha256
+          printf 'source_branch=%s\nsource_commit=%s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" > BUILD_EVIDENCE.txt
+          cat APK-Builder-5.0.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
+
+      - name: Upload one-time build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK-Builder-5.0.0-host
+          path: |
+            APK-Builder-5.0.0-debug.apk
+            APK-Builder-5.0.0-debug.apk.sha256
+            BUILD_EVIDENCE.txt
+          if-no-files-found: error
+          retention-days: 7
