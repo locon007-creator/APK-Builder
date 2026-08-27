@@ -201,7 +201,7 @@ public final class EngineSelfTest {
 
   private static Path makeShell(Path apk, boolean includeDex) throws Exception {
     try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(apk))) {
-      put(out, "AndroidManifest.xml", "manifest".getBytes(StandardCharsets.UTF_8));
+      put(out, "AndroidManifest.xml", TestBinaryManifest.shellManifest("com.osulsa.generated"));
       put(out, "resources.arsc", "resources".getBytes(StandardCharsets.UTF_8));
       if (includeDex) put(out, "classes.dex", "dex".getBytes(StandardCharsets.UTF_8));
       put(out, "assets/html/index.html", "old".getBytes(StandardCharsets.UTF_8));
