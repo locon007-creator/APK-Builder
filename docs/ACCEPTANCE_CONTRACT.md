@@ -62,6 +62,16 @@ This contract defines the minimum evidence required before APK Builder or a gene
 **when** the feature is exercised on a generated APK,
 **then** there must be real-device evidence that the app launches and the capability performs its intended job. Packaging success alone is not enough.
 
+## Scenario 11 — Update an existing APK without rebuilding its Android setup
+
+**Given** an APK previously created by APK Builder, its original signing key/certificate, and a new HTML/ZIP project,
+**when** the user chooses Update Existing APK,
+**then** the builder must preserve the existing package name, app identity, icon, splash, permissions, Android resources, and native configuration; replace only the packaged web project; remove the old APK signature metadata; increment `versionCode`; align and sign the result with the original signer; and verify the final update APK before it can be installed or shared.
+
+If the supplied signing certificate does not match the existing APK, the update must stop before publication. The existing good APK/output must remain untouched.
+
+**Real-device update proof:** install version N, save representative app state (including applicable local storage/database/preferences), install version N+1 over it, launch the app, and verify both the new web content and the previously saved state remain available. This device test is required before data-preserving update behavior can be called verified.
+
 ## Cross-cutting checks
 
 Every relevant release must also verify:
