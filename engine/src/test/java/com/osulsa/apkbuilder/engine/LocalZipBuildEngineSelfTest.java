@@ -91,12 +91,12 @@ public final class LocalZipBuildEngineSelfTest {
 
   private static Path makeShell(Path apk) throws Exception {
     try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(apk))) {
-      put(out, "AndroidManifest.xml", "manifest");
-      put(out, "resources.arsc", "resources");
-      put(out, "classes.dex", "dex");
-      put(out, "assets/html/old.js", "old");
-      put(out, "assets/app_config.json", "{\"appType\":\"WEB\"}");
-      put(out, "META-INF/OLD.RSA", "old-signature");
+      put(out, "AndroidManifest.xml", TestBinaryManifest.shellManifest("com.osulsa.generated"));
+      put(out, "resources.arsc", "resources".getBytes(StandardCharsets.UTF_8));
+      put(out, "classes.dex", "dex".getBytes(StandardCharsets.UTF_8));
+      put(out, "assets/html/old.js", "old".getBytes(StandardCharsets.UTF_8));
+      put(out, "assets/app_config.json", "{\"appType\":\"WEB\"}".getBytes(StandardCharsets.UTF_8));
+      put(out, "META-INF/OLD.RSA", "old-signature".getBytes(StandardCharsets.UTF_8));
     }
     return apk;
   }
@@ -111,9 +111,13 @@ public final class LocalZipBuildEngineSelfTest {
   }
 
   private static void put(ZipOutputStream out, String name, String value) throws Exception {
+    put(out, name, value.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private static void put(ZipOutputStream out, String name, byte[] data) throws Exception {
     ZipEntry entry = new ZipEntry(name);
     out.putNextEntry(entry);
-    out.write(value.getBytes(StandardCharsets.UTF_8));
+    out.write(data);
     out.closeEntry();
   }
 
