@@ -84,6 +84,8 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           cp "$APK" APK-Builder-5.0.0-debug.apk
           sha256sum APK-Builder-5.0.0-debug.apk > APK-Builder-5.0.0-debug.apk.sha256
+          mkdir -p signing-tools
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" signing-tools/apksigner.jar
           printf 'source_branch=%s\nsource_commit=%s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" > BUILD_EVIDENCE.txt
           cat APK-Builder-5.0.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
 
@@ -95,5 +97,6 @@ jobs:
             APK-Builder-5.0.0-debug.apk
             APK-Builder-5.0.0-debug.apk.sha256
             BUILD_EVIDENCE.txt
+            signing-tools/apksigner.jar
           if-no-files-found: error
           retention-days: 7
