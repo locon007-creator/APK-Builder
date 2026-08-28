@@ -1,0 +1,98 @@
+name: APK Builder 5 one-time emulator smoke
+
+on:
+  push:
+    branches:
+      - apkbuilder-permanent-reset
+    paths:
+      - .github/EMULATOR_SMOKE_ONCE
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout isolated branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download verified host artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: APK-Builder-5.0.0-host
+          path: host-artifact
+          github-token: ${{ github.token }}
+          run-id: 33129084058
+
+      - name: Verify downloaded APK before device test
+        run: |
+          cd host-artifact
+          sha256sum -c APK-Builder-5.0.0-debug.apk.sha256
+          unzip -tqq APK-Builder-5.0.0-debug.apk
+
+      - name: Install emulator image
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager --install 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          echo no | avdmanager create avd --force --name apkbuilder-smoke --package 'system-images;android-35;google_apis;x86_64' --device 'pixel_6'
+
+      - name: Boot emulator
+        run: |
+          sudo chmod 666 /dev/kvm || true
+          nohup emulator -avd apkbuilder-smoke -no-window -noaudio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > emulator.log 2>&1 &
+          adb wait-for-device
+          for i in $(seq 1 90); do
+            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            [ "$BOOT" = "1" ] && break
+            sleep 5
+          done
+          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
+          adb shell input keyevent 82 || true
+
+      - name: Install and launch APK Builder
+        run: |
+          APK=host-artifact/APK-Builder-5.0.0-debug.apk
+          adb install -r "$APK"
+          adb shell pm path com.locon007.apkbuilder
+          adb shell monkey -p com.locon007.apkbuilder -c android.intent.category.LAUNCHER 1
+          sleep 8
+          adb shell pidof com.locon007.apkbuilder
+          adb shell dumpsys package com.locon007.apkbuilder | grep -E 'versionCode=500|versionName=5.0.0' | head -5
+
+      - name: Verify first screen rendered
+        run: |
+          adb shell uiautomator dump /sdcard/apkbuilder-window.xml >/dev/null
+          adb pull /sdcard/apkbuilder-window.xml apkbuilder-window.xml >/dev/null
+          grep -F 'APK Builder' apkbuilder-window.xml
+          grep -F 'Update Existing APK' apkbuilder-window.xml
+
+      - name: Check launch crash log
+        run: |
+          if adb logcat -d -v brief | grep -E 'FATAL EXCEPTION.*com.locon007.apkbuilder|Process: com.locon007.apkbuilder.*FATAL'; then
+            echo 'APK Builder fatal launch crash detected'
+            exit 1
+          fi
+          echo 'EMULATOR_INSTALL_LAUNCH_UI_PASS'
+
+      - name: Upload smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK-Builder-5.0.0-emulator-evidence
+          path: |
+            apkbuilder-window.xml
+            emulator.log
+          if-no-files-found: warn
+          retention-days: 7
