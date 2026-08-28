@@ -12,7 +12,7 @@ s = s.replace(
 )
 
 old_version_patch = '''build_text = build.read_text()\nbuild_text = build_text.replace('versionCode = 311', 'versionCode = 500')\nbuild_text = build_text.replace('versionName = "3.1.1"', 'versionName = "5.0.0"')\nbuild.write_text(build_text)\n'''
-new_version_patch = '''build_text = build.read_text()\nbuild_text, version_code_changes = re.subn(\n    r'(?m)^(\\s*)versionCode\\s*=\\s*\\d+\\s*$',\n    r'\\1versionCode = 500',\n    build_text,\n    count=1,\n)\nbuild_text, version_name_changes = re.subn(\n    r'(?m)^(\\s*)versionName\\s*=\\s*"[^"]+"\\s*$',\n    r'\\1versionName = "5.0.0"',\n    build_text,\n    count=1,\n)\nif version_code_changes != 1 or version_name_changes != 1:\n    raise SystemExit(\n        f'Could not set APK Builder 5 identity: versionCode={version_code_changes}, versionName={version_name_changes}'\n    )\nbuild.write_text(build_text)\n'''
+new_version_patch = '''build_text = build.read_text()\nbuild_text, version_code_changes = re.subn(\n    r'(?m)^(\\s*)versionCode\\s*=\\s*\\d+\\s*$',\n    r'\\1versionCode = 501',\n    build_text,\n    count=1,\n)\nbuild_text, version_name_changes = re.subn(\n    r'(?m)^(\\s*)versionName\\s*=\\s*"[^"]+"\\s*$',\n    r'\\1versionName = "5.0.1"',\n    build_text,\n    count=1,\n)\nif version_code_changes != 1 or version_name_changes != 1:\n    raise SystemExit(\n        f'Could not set APK Builder 5.0.1 identity: versionCode={version_code_changes}, versionName={version_name_changes}'\n    )\nbuild.write_text(build_text)\n'''
 if old_version_patch not in s:
     raise SystemExit('version patch compatibility target not found')
 s = s.replace(old_version_patch, new_version_patch, 1)
