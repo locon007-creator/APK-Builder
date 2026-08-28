@@ -65,7 +65,7 @@ public final class LocalZipBuildEngine {
       BuildEvidence evidence = new BuildEvidence(
           attempt.getFileName().toString(), builderVersion, contract.templateVersion(), sourceBefore, inputHash, outputHash,
           certHash, identity.packageName(), "PASS", "PASS", Instant.now());
-      Files.writeString(attempt.resolve("build-evidence.json"), evidence.toJson());
+      Files.write(attempt.resolve("build-evidence.json"), evidence.toJson().getBytes(java.nio.charset.StandardCharsets.UTF_8));
       return evidence;
     } catch (TemplateException e) { throw e; }
     catch (Exception e) { throw new TemplateException(TemplateErrorCode.OUTPUT_VERIFY_FAILED, "Local ZIP build failed", e); }
