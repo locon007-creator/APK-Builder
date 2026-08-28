@@ -1,4 +1,4 @@
-name: APK Builder 5 one-time emulator smoke
+name: APK Builder 5.0.1 audited emulator smoke
 
 on:
   push:
@@ -28,23 +28,27 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Download verified host artifact
+      - name: Download audited host artifact
         uses: actions/download-artifact@v4
         with:
-          name: APK-Builder-5.0.0-host
+          name: APK-Builder-5.0.1-audited-host
           path: host-artifact
           github-token: ${{ github.token }}
-          run-id: 33129084058
+          run-id: 33198981835
 
       - name: Verify downloaded APK before device test
         run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager --install 'build-tools;36.0.0'
           cd host-artifact
-          sha256sum -c APK-Builder-5.0.0-debug.apk.sha256
-          unzip -tqq APK-Builder-5.0.0-debug.apk
+          sha256sum -c APK-Builder-5.0.1-debug.apk.sha256
+          unzip -tqq APK-Builder-5.0.1-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 APK-Builder-5.0.1-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs APK-Builder-5.0.1-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging APK-Builder-5.0.1-debug.apk | grep -F "package: name='com.locon007.apkbuilder' versionCode='501' versionName='5.0.1'"
 
       - name: Install emulator image
         run: |
-          yes | sdkmanager --licenses >/dev/null
           sdkmanager --install 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
           echo no | avdmanager create avd --force --name apkbuilder-smoke --package 'system-images;android-35;google_apis;x86_64' --device 'pixel_6'
 
@@ -63,13 +67,13 @@ jobs:
 
       - name: Install and launch APK Builder
         run: |
-          APK=host-artifact/APK-Builder-5.0.0-debug.apk
+          APK=host-artifact/APK-Builder-5.0.1-debug.apk
           adb install -r "$APK"
           adb shell pm path com.locon007.apkbuilder
           adb shell monkey -p com.locon007.apkbuilder -c android.intent.category.LAUNCHER 1
           sleep 8
           adb shell pidof com.locon007.apkbuilder
-          adb shell dumpsys package com.locon007.apkbuilder | grep -E 'versionCode=500|versionName=5.0.0' | head -5
+          adb shell dumpsys package com.locon007.apkbuilder | grep -E 'versionCode=501|versionName=5.0.1' | head -5
 
       - name: Verify first screen rendered
         run: |
@@ -90,7 +94,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: APK-Builder-5.0.0-emulator-evidence
+          name: APK-Builder-5.0.1-emulator-evidence
           path: |
             apkbuilder-window.xml
             emulator.log
