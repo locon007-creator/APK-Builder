@@ -1,4 +1,4 @@
 APK Builder 5.1.0 audited Android host build
 requested=2026-08-28
-attempt=6
-purpose=add explicit Save APK action while preserving Update Existing APK and no-browser-chrome guarantees
+attempt=7
+purpose=rerun after replacing brittle compiled-DEX Save APK string check with source+unit-test verification
