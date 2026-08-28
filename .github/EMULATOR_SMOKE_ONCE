@@ -1,4 +1,3 @@
-APK Builder 5.0.0 emulator smoke
-requested=2026-08-27
-build_run=33129084058
-purpose=install launch and verify first-screen UI on Android emulator
+APK Builder 5.0.1 audited emulator smoke
+requested=2026-08-28
+purpose=official zipalign/signature checks plus Android install, launch, first-screen rendering, and crash check
