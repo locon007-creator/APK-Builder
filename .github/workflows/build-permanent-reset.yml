@@ -96,7 +96,8 @@ jobs:
           unzip -tqq webview_shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='510' versionName='5.1.0'"
-          unzip -p "$APK" classes.dex | strings | grep -F 'Save APK'
+          grep -F 'ApkFileSaver.copyApk(apkFile, it)' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
+          grep -F 'failures="0"' source/app/build/test-results/testStandardDebugUnitTest/TEST-com.webtoapp.core.apkbuilder.ApkFileSaverTest.xml
           cp "$APK" APK-Builder-5.1.0-debug.apk
           sha256sum APK-Builder-5.1.0-debug.apk > APK-Builder-5.1.0-debug.apk.sha256
           mkdir -p signing-tools
