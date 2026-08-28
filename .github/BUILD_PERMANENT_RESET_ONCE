@@ -1,4 +1,4 @@
-APK Builder 5.0.0 one-time Android host build
-requested=2026-08-27
-attempt=4
-purpose=compile and verify permanent-reset host after replacing desktop-only Files.writeString calls
+APK Builder 5.0.1 audited Android host build
+requested=2026-08-28
+attempt=5
+purpose=restore generated-app browser-toolbar fix, harden no-chrome engine defaults, and verify corrected host
