@@ -1,4 +1,4 @@
 APK Builder 5.1.1 update source-selection fix
 requested=2026-08-28
-attempt=9
-purpose=GREEN regression plus audited Android build: Update Existing APK highlights and enables Continue before opening update flow
+attempt=10
+purpose=GREEN regression plus audited Android build after aligning synthetic regression fixture to real wizard nesting
