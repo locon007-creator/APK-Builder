@@ -84,7 +84,7 @@ public final class ExistingApkUpdateEngine {
           existingHash,
           outputHash,
           Instant.now());
-      Files.writeString(attempt.resolve("update-evidence.json"), toJson(evidence));
+      Files.write(attempt.resolve("update-evidence.json"), toJson(evidence).getBytes(java.nio.charset.StandardCharsets.UTF_8));
       return evidence;
     } catch (TemplateException e) {
       throw e;
