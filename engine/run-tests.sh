@@ -14,3 +14,4 @@ java -cp "$OUT" com.osulsa.apkbuilder.engine.LocalZipBuildEngineSelfTest
 java -cp "$OUT" com.osulsa.apkbuilder.engine.AtomicApkPublisherSelfTest
 java -cp "$OUT" com.osulsa.apkbuilder.engine.ExistingApkWebUpdaterSelfTest
 java -cp "$OUT" com.osulsa.apkbuilder.engine.ExistingApkUpdateEngineSelfTest
+java -cp "$OUT" com.osulsa.apkbuilder.engine.ShellConfigFactorySelfTest
