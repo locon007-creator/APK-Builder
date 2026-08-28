@@ -1,4 +1,4 @@
-APK Builder update source-selection regression
+APK Builder 5.1.1 update source-selection fix
 requested=2026-08-28
-attempt=8
-purpose=RED test: prove Update Existing APK does not yet participate in normal selected/highlighted Continue flow
+attempt=9
+purpose=GREEN regression plus audited Android build: Update Existing APK highlights and enables Continue before opening update flow
