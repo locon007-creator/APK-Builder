@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-FIXER = Path(__file__).with_name("apply-two-step-update-flow.py")
+FIXER = Path(__file__).with_name("apply-two-step-update-flow-final.py")
 
 with tempfile.TemporaryDirectory() as tmp:
     root = Path(tmp)
@@ -18,10 +18,10 @@ with tempfile.TemporaryDirectory() as tmp:
     out = dialog.read_text()
     build_out = build.read_text()
 
-    assert 'Text("Step 1 of 2")' in out
-    assert 'Text("Choose the APK you want to upgrade")' in out
-    assert 'Text("Step 2 of 2")' in out
-    assert 'Text("Choose the ZIP with your updated app")' in out
+    assert 'Text("Step 1 of 2"' in out
+    assert 'Text("Choose the APK you want to upgrade"' in out
+    assert 'Text("Step 2 of 2"' in out
+    assert 'Text("Choose the ZIP with your updated app"' in out
     assert "existingInfo != null" in out
     assert "ProjectArchive.prepare" in out
     assert "ZipProjectImporter.importZip" not in out
