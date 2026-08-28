@@ -21,32 +21,19 @@ fun ApkBuilderWizard() {
         null -> false
     }
 
-    Button(
-        onClick = {
-            when (step) {
-                WizardStep.SOURCE -> {
-                    if (source == WizardSource.WEBSITE && !WizardRules.isValidWebsite(websiteUrl)) errorMessage = ApkBuilderStrings.invalidWebsite
-                    else { errorMessage = null; step = WizardRules.next(step) }
-                }
-                WizardStep.IDENTITY, WizardStep.SPLASH -> { errorMessage = null; step = WizardRules.next(step) }
-                WizardStep.CONFIRM -> createAndBuild()
-                WizardStep.CREATING -> Unit
-            }
-        },
-        enabled = !isBusy && WizardRules.canContinue(step, sourceReady, appName, iconPath != null, splashPath != null),
-    ) { Text(ApkBuilderStrings.continueLabel) }
+                                    WizardStep.SOURCE -> {
+                                        if (source == WizardSource.WEBSITE && !WizardRules.isValidWebsite(websiteUrl)) errorMessage = ApkBuilderStrings.invalidWebsite
+                                        else { errorMessage = null; step = WizardRules.next(step) }
+                                    }
 
-    when (step) {
-        WizardStep.SOURCE -> SourceStep(
-            source, websiteUrl, htmlFile, zipAnalysis, isBusy,
-            onSource = { source = it; errorMessage = null },
-            onWebsiteUrl = { websiteUrl = it; source = WizardSource.WEBSITE },
-            onHtml = { htmlPicker.launch(arrayOf("text/html", "application/xhtml+xml", "text/plain")) },
-            onZip = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
-            onUpdateExisting = { showUpdateExisting = true },
-        )
-        else -> Unit
-    }
+                WizardStep.SOURCE -> SourceStep(
+                    source, websiteUrl, htmlFile, zipAnalysis, isBusy,
+                    onSource = { source = it; errorMessage = null },
+                    onWebsiteUrl = { websiteUrl = it; source = WizardSource.WEBSITE },
+                    onHtml = { htmlPicker.launch(arrayOf("text/html", "application/xhtml+xml", "text/plain")) },
+                    onZip = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+                    onUpdateExisting = { showUpdateExisting = true },
+                )
 }
 
 @Composable
