@@ -36,6 +36,13 @@ final class ShellConfigFactory {
           "\"allowFileAccess\":false," +
           "\"allowContentAccess\":false," +
           "\"hideToolbar\":true," +
+          "\"hideBrowserToolbar\":true," +
+          "\"toolbarShowTitle\":false," +
+          "\"toolbarShowUrl\":false," +
+          "\"toolbarShowBack\":false," +
+          "\"toolbarShowForward\":false," +
+          "\"toolbarShowRefresh\":false," +
+          "\"browserToolbarCustomized\":true," +
           "\"enableNativeBridge\":false" +
         "}," +
         "\"appType\":\"HTML\"," +
