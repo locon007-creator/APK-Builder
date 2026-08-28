@@ -72,12 +72,12 @@ jobs:
           python3 scripts/fix-existing-apk-update-script.py scripts/apply-existing-apk-update.py
           python3 scripts/apply-existing-apk-update.py source
           python3 scripts/apply-update-selection-flow-fix.py source
-          python3 scripts/apply-two-step-update-flow.py source
+          python3 scripts/apply-two-step-update-flow-final.py source
           python3 scripts/apply-save-apk-action.py source
           grep -F 'var updateExistingSelected by remember { mutableStateOf(false) }' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
           grep -F 'val sourceReady = updateExistingSelected || when (source)' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
-          grep -F 'Text("Step 1 of 2")' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
-          grep -F 'Text("Step 2 of 2")' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
+          grep -F 'Text("Step 1 of 2"' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
+          grep -F 'Text("Step 2 of 2"' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'ProjectArchive.prepare' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           ! grep -F 'ZipProjectImporter.importZip' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'ExistingApkWebUpdater.prepareUnsigned' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
