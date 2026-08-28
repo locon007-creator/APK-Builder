@@ -1,4 +1,4 @@
-name: APK Builder 5.0.1 audited host build
+name: APK Builder 5.1.0 audited host build
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
           grep -F 'val browserToolbarCustomized: Boolean = true' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
           test -f source/app/src/test/java/com/webtoapp/data/model/ApkBuilderGeneratedAppDefaultsTest.kt
 
-      - name: Inject tested update engine
+      - name: Inject update and Save APK features
         run: |
           mkdir -p source/app/src/main/java/com/osulsa/apkbuilder/engine
           cp engine/src/main/java/com/osulsa/apkbuilder/engine/*.java source/app/src/main/java/com/osulsa/apkbuilder/engine/
@@ -65,10 +65,14 @@ jobs:
           rm -f source/app/src/main/java/com/osulsa/apkbuilder/engine/LocalZipBuildEngine3.java
           python3 scripts/fix-existing-apk-update-script.py scripts/apply-existing-apk-update.py
           python3 scripts/apply-existing-apk-update.py source
+          python3 scripts/apply-save-apk-action.py source
           grep -F 'Update Existing APK' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
           grep -F 'ExistingApkWebUpdater.prepareUnsigned' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
-          grep -F 'versionCode = 501' source/app/build.gradle.kts
-          grep -F 'versionName = "5.0.1"' source/app/build.gradle.kts
+          grep -F 'Text("Save APK"' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
+          grep -F 'ActivityResultContracts.CreateDocument("application/vnd.android.package-archive")' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
+          test -f source/app/src/test/java/com/webtoapp/core/apkbuilder/ApkFileSaverTest.kt
+          grep -F 'versionCode = 510' source/app/build.gradle.kts
+          grep -F 'versionName = "5.1.0"' source/app/build.gradle.kts
 
       - name: Install Android build tools
         run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'cmake;3.22.1' 'ndk;28.2.13676358'
@@ -91,22 +95,23 @@ jobs:
           test -s webview_shell.apk
           unzip -tqq webview_shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='501' versionName='5.0.1'"
-          cp "$APK" APK-Builder-5.0.1-debug.apk
-          sha256sum APK-Builder-5.0.1-debug.apk > APK-Builder-5.0.1-debug.apk.sha256
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='510' versionName='5.1.0'"
+          unzip -p "$APK" classes.dex | strings | grep -F 'Save APK'
+          cp "$APK" APK-Builder-5.1.0-debug.apk
+          sha256sum APK-Builder-5.1.0-debug.apk > APK-Builder-5.1.0-debug.apk.sha256
           mkdir -p signing-tools
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" signing-tools/apksigner.jar
           printf 'source_branch=%s\nsource_commit=%s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" > BUILD_EVIDENCE.txt
-          printf 'toolbar_regression_fix=PASS\n' >> BUILD_EVIDENCE.txt
-          cat APK-Builder-5.0.1-debug.apk.sha256 >> BUILD_EVIDENCE.txt
+          printf 'toolbar_regression_fix=PASS\nsave_apk_action=PASS\n' >> BUILD_EVIDENCE.txt
+          cat APK-Builder-5.1.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
 
       - name: Upload one-time build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: APK-Builder-5.0.1-audited-host
+          name: APK-Builder-5.1.0-audited-host
           path: |
-            APK-Builder-5.0.1-debug.apk
-            APK-Builder-5.0.1-debug.apk.sha256
+            APK-Builder-5.1.0-debug.apk
+            APK-Builder-5.1.0-debug.apk.sha256
             BUILD_EVIDENCE.txt
             signing-tools/apksigner.jar
           if-no-files-found: error
