@@ -1,4 +1,4 @@
-APK Builder 5.1.1 update source-selection fix
+APK Builder two-step update crash/UX regression
 requested=2026-08-28
-attempt=10
-purpose=GREEN regression plus audited Android build after aligning synthetic regression fixture to real wizard nesting
+attempt=11
+purpose=RED test: prove current update dialog lacks staged APK then ZIP flow and hardened ProjectArchive import
