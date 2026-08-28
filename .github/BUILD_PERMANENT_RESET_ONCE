@@ -1,4 +1,4 @@
-APK Builder 5.1.0 audited Android host build
+APK Builder update source-selection regression
 requested=2026-08-28
-attempt=7
-purpose=rerun after replacing brittle compiled-DEX Save APK string check with source+unit-test verification
+attempt=8
+purpose=RED test: prove Update Existing APK does not yet participate in normal selected/highlighted Continue flow
