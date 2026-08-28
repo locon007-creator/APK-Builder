@@ -35,6 +35,9 @@ jobs:
       - name: Test local engine
         run: sh engine/run-tests.sh
 
+      - name: Test update source selection flow
+        run: python3 scripts/test-update-selection-flow-fix.py
+
       - name: Recover proven APK Builder host overlay
         run: |
           git show 9aab10bbbf3d11e0f1b9521896256f833b6c828c:overlay/apk-builder.patch > /tmp/apk-builder.patch
