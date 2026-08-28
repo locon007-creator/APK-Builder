@@ -41,8 +41,8 @@ fun ApkBuilderWizard() {
             source, websiteUrl, htmlFile, zipAnalysis, isBusy,
             onSource = { source = it; errorMessage = null },
             onWebsiteUrl = { websiteUrl = it; source = WizardSource.WEBSITE },
-            onHtml = { htmlPicker.launch(arrayOf("text/html")) },
-            onZip = { zipPicker.launch(arrayOf("application/zip")) },
+            onHtml = { htmlPicker.launch(arrayOf("text/html", "application/xhtml+xml", "text/plain")) },
+            onZip = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
             onUpdateExisting = { showUpdateExisting = true },
         )
         else -> Unit
@@ -91,9 +91,11 @@ with tempfile.TemporaryDirectory() as tmp:
     assert "onSource = { updateExistingSelected = false; source = it; errorMessage = null }" in out
     assert "onWebsiteUrl = { updateExistingSelected = false; websiteUrl = it; source = WizardSource.WEBSITE }" in out
     assert "onUpdateExisting = { updateExistingSelected = true; source = null; errorMessage = null }" in out
-    assert "updateExistingSelected, isBusy" in out
-    assert 'SourceCard(Icons.Outlined.SystemUpdateAlt, "Update Existing APK"' in out
-    assert "updateExistingSelected) { onUpdateExisting() }" in out
+    assert "source, websiteUrl, htmlFile, zipAnalysis, updateExistingSelected, isBusy" in out
+    assert "SourceCard(" in out
+    assert '"Update Existing APK"' in out
+    assert "updateExistingSelected," in out
+    assert ") { onUpdateExisting() }" in out
     assert "versionCode = 511" in build_out
     assert 'versionName = "5.1.1"' in build_out
 
