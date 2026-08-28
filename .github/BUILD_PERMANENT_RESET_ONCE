@@ -1,4 +1,4 @@
-APK Builder 5.0.1 audited Android host build
+APK Builder 5.1.0 audited Android host build
 requested=2026-08-28
-attempt=5
-purpose=restore generated-app browser-toolbar fix, harden no-chrome engine defaults, and verify corrected host
+attempt=6
+purpose=add explicit Save APK action while preserving Update Existing APK and no-browser-chrome guarantees
