@@ -1,4 +1,4 @@
-APK Builder two-step update crash/UX regression
+APK Builder 5.2.0 safe two-step update flow
 requested=2026-08-28
-attempt=11
-purpose=RED test: prove current update dialog lacks staged APK then ZIP flow and hardened ProjectArchive import
+attempt=12
+purpose=GREEN regression plus audited Android build using hardened ProjectArchive for update ZIPs
