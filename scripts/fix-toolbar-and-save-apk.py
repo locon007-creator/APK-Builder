@@ -16,8 +16,8 @@ def replace_once(path, old, new):
 preview = root / 'app/src/main/java/com/webtoapp/ui/webview/WebViewActivity.kt'
 replace_once(
     preview,
-    '    val toolbarEnabled = !isTestMode && webApp?.webViewConfig?.browserToolbarEnabled == true',
-    '    val toolbarEnabled = !isTestMode && webApp?.appType != com.webtoapp.data.model.AppType.HTML && webApp?.webViewConfig?.browserToolbarEnabled == true',
+    '    val shouldShowTopBar = showToolbarInPreview && (!hideBrowserToolbar || showSlimToolbar)',
+    '    val shouldShowTopBar = showToolbarInPreview && (!hideBrowserToolbar || showSlimToolbar) && webApp?.appType != com.webtoapp.data.model.AppType.HTML',
 )
 
 # Make the exported HTML APK chrome-free even for a previously saved project
