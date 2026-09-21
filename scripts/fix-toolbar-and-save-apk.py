@@ -11,8 +11,6 @@ def replace_once(path, old, new):
         raise SystemExit(f'Expected exactly one anchor in {path}, found {count}: {old[:100]}')
     path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-# The toolbar in the screenshot is the builder preview toolbar. Hide it for
-# offline HTML apps without removing controls from website/browser projects.
 preview = root / 'app/src/main/java/com/webtoapp/ui/webview/WebViewActivity.kt'
 replace_once(
     preview,
@@ -20,16 +18,13 @@ replace_once(
     '    val shouldShowTopBar = showToolbarInPreview && (!hideBrowserToolbar || showSlimToolbar) && webApp?.appType != com.webtoapp.data.model.AppType.HTML',
 )
 
-# Make the exported HTML APK chrome-free even for a previously saved project
-# whose old preview configuration had browser controls enabled.
 build = root / 'app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt'
 replace_once(
     build,
     '        return webApp.copy(\n            apkExportConfig =',
-    '        return webApp.copy(\n            webViewConfig = if (webApp.appType == AppType.HTML) webApp.webViewConfig.copy(\n                browserToolbarEnabled = false,\n                hideToolbar = true,\n                showToolbarInFullscreen = false,\n            ) else webApp.webViewConfig,\n            apkExportConfig =',
+    '        return webApp.copy(\n            webViewConfig = if (webApp.appType == AppType.HTML) webApp.webViewConfig.copy(\n                hideBrowserToolbar = true,\n                hideToolbar = true,\n                showToolbarInFullscreen = false,\n            ) else webApp.webViewConfig,\n            apkExportConfig =',
 )
 
-# Save must write to an explicit user-picked location, not only share an APK.
 replace_once(
     build,
     'import androidx.compose.runtime.Composable\n',
