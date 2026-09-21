@@ -1,4 +1,4 @@
-name: Build APK Builder 4.0.1
+name: Build APK Builder 4.0.2
 on:
   push:
     branches: [recovery/apk-builder-4.0-verified]
@@ -6,6 +6,7 @@ on:
       - "overlay/apk-builder.patch"
       - "scripts/apply-native-features.py"
       - "scripts/fix-generated-app-gestures-and-name.py"
+      - "scripts/fix-toolbar-and-save-apk.py"
       - ".github/workflows/build-apk-builder.yml"
   workflow_dispatch:
 permissions:
@@ -26,6 +27,8 @@ jobs:
         run: cp overlay-repo/scripts/apply-native-features.py source/scripts/apply-native-features.py && python3 source/scripts/apply-native-features.py
       - name: Fix generated app gestures and launcher name
         run: cp overlay-repo/scripts/fix-generated-app-gestures-and-name.py source/scripts/fix-generated-app-gestures-and-name.py && python3 source/scripts/fix-generated-app-gestures-and-name.py
+      - name: Hide HTML browser controls and restore Save APK
+        run: cp overlay-repo/scripts/fix-toolbar-and-save-apk.py source/scripts/fix-toolbar-and-save-apk.py && python3 source/scripts/fix-toolbar-and-save-apk.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -56,9 +59,9 @@ jobs:
           sha256sum APK-Builder.apk > APK-Builder.apk.sha256
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v4.0.1
-          name: APK Builder 4.0.1
-          body: "Applies the generated app's selected name to the Android launcher label and preserves horizontal gestures while allowing vertical pull-to-refresh."
+          tag_name: v4.0.2
+          name: APK Builder 4.0.2
+          body: "Keeps the bidirectional swipe and app-name changes, hides HTML browser controls, and restores an explicit Save APK action after building."
           files: |
             APK-Builder.apk
             APK-Builder.apk.sha256
