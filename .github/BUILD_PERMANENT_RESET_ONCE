@@ -1,4 +1,4 @@
 APK Builder 5.3.0 clean splash and navigation bar option
 requested=2026-10-01
-attempt=15
-purpose=rerun after fixing retired Android SDK tools package failure
+attempt=16
+purpose=rerun after fixing sdkmanager PATH on current GitHub runner
