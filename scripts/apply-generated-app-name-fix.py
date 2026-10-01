@@ -39,8 +39,8 @@ builder = root / "app/src/main/java/com/webtoapp/core/apkbuilder/ApkBuilder.kt"
 if not builder.is_file():
     raise SystemExit("ApkBuilder.kt not found")
 text = builder.read_text()
-old_output = 'val signedApk = File(outputDir, "$\{sanitizeFileName(webApp.name)}_v$\{config.versionName}.APK")'
-new_output = 'val signedApk = File(outputDir, "$\{sanitizeFileName(webApp.name)}.apk")'
+old_output = 'val signedApk = File(outputDir, "${sanitizeFileName(webApp.name)}_v${config.versionName}.APK")'
+new_output = 'val signedApk = File(outputDir, "${sanitizeFileName(webApp.name)}.apk")'
 if old_output not in text:
     raise SystemExit("signed APK filename anchor not found")
 text = text.replace(old_output, new_output, 1)
