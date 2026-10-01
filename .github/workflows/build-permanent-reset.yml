@@ -1,4 +1,4 @@
-name: APK Builder 5.2.0 audited host build
+name: APK Builder 5.3.0 audited host build
 
 on:
   push:
@@ -74,6 +74,12 @@ jobs:
           python3 scripts/apply-update-selection-flow-fix.py source
           python3 scripts/apply-two-step-update-flow-final.py source
           python3 scripts/apply-save-apk-action.py source
+          python3 scripts/apply-splash-navigation-upgrade.py source
+          grep -F 'val duration: Int = 2' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
+          grep -F 'val clickToSkip: Boolean = false' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
+          grep -F 'val showCountdown: Boolean = false' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
+          grep -F 'var keepNavigationBarVisible by remember { mutableStateOf(false) }' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
+          grep -F 'showNavigationBarInFullscreen = keepNavigationBarVisible' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
           grep -F 'var updateExistingSelected by remember { mutableStateOf(false) }' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
           grep -F 'val sourceReady = updateExistingSelected || when (source)' source/app/src/main/java/com/webtoapp/ui/wizard/ApkBuilderWizard.kt
           grep -F 'Text("Step 1 of 2"' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
@@ -83,8 +89,8 @@ jobs:
           grep -F 'ExistingApkWebUpdater.prepareUnsigned' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'Text("Save APK"' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
           test -f source/app/src/test/java/com/webtoapp/core/apkbuilder/ApkFileSaverTest.kt
-          grep -F 'versionCode = 520' source/app/build.gradle.kts
-          grep -F 'versionName = "5.2.0"' source/app/build.gradle.kts
+          grep -F 'versionCode = 530' source/app/build.gradle.kts
+          grep -F 'versionName = "5.3.0"' source/app/build.gradle.kts
 
       - name: Install Android build tools
         run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'cmake;3.22.1' 'ndk;28.2.13676358'
@@ -107,26 +113,26 @@ jobs:
           test -s webview_shell.apk
           unzip -tqq webview_shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='520' versionName='5.2.0'"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='530' versionName='5.3.0'"
           grep -F 'ProjectArchive.prepare' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'enabled = !busy && existingInfo != null && project != null' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'ApkFileSaver.copyApk(apkFile, it)' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
           grep -F 'failures="0"' source/app/build/test-results/testStandardDebugUnitTest/TEST-com.webtoapp.core.apkbuilder.ApkFileSaverTest.xml
-          cp "$APK" APK-Builder-5.2.0-debug.apk
-          sha256sum APK-Builder-5.2.0-debug.apk > APK-Builder-5.2.0-debug.apk.sha256
+          cp "$APK" APK-Builder-5.3.0-debug.apk
+          sha256sum APK-Builder-5.3.0-debug.apk > APK-Builder-5.3.0-debug.apk.sha256
           mkdir -p signing-tools
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" signing-tools/apksigner.jar
           printf 'source_branch=%s\nsource_commit=%s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" > BUILD_EVIDENCE.txt
           printf 'toolbar_regression_fix=PASS\nsave_apk_action=PASS\nupdate_source_selection_fix=PASS\ntwo_step_update_flow=PASS\nhardened_project_archive=PASS\n' >> BUILD_EVIDENCE.txt
-          cat APK-Builder-5.2.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
+          cat APK-Builder-5.3.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
 
       - name: Upload one-time build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: APK-Builder-5.2.0-audited-host
+          name: APK-Builder-5.3.0-audited-host
           path: |
-            APK-Builder-5.2.0-debug.apk
-            APK-Builder-5.2.0-debug.apk.sha256
+            APK-Builder-5.3.0-debug.apk
+            APK-Builder-5.3.0-debug.apk.sha256
             BUILD_EVIDENCE.txt
             signing-tools/apksigner.jar
           if-no-files-found: error
