@@ -1,4 +1,4 @@
-name: APK Builder 5.3.0 audited host build
+name: APK Builder 5.3.1 audited host build
 
 on:
   push:
@@ -72,6 +72,7 @@ jobs:
           python3 scripts/apply-two-step-update-flow-final.py source
           python3 scripts/apply-save-apk-action.py source
           python3 scripts/apply-splash-navigation-upgrade.py source
+          python3 scripts/apply-generated-app-name-fix.py source
           grep -F 'val duration: Int = 2' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
           grep -F 'val clickToSkip: Boolean = false' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
           grep -F 'val showCountdown: Boolean = false' source/app/src/main/java/com/webtoapp/data/model/WebApp.kt
@@ -86,8 +87,11 @@ jobs:
           grep -F 'ExistingApkWebUpdater.prepareUnsigned' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'Text("Save APK"' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
           test -f source/app/src/test/java/com/webtoapp/core/apkbuilder/ApkFileSaverTest.kt
-          grep -F 'versionCode = 530' source/app/build.gradle.kts
-          grep -F 'versionName = "5.3.0"' source/app/build.gradle.kts
+          grep -F 'versionCode = 531' source/app/build.gradle.kts
+          grep -F 'versionName = "5.3.1"' source/app/build.gradle.kts
+          grep -F '"APK Builder"' source/app/src/main/java/com/webtoapp/core/apkbuilder/ArscRebuilder.kt
+          grep -F 'val signedApk = File(outputDir, "${sanitizeFileName(webApp.name)}.apk")' source/app/src/main/java/com/webtoapp/core/apkbuilder/ApkBuilder.kt
+          grep -F 'return "$base.apk"' source/app/src/main/java/com/webtoapp/core/apkbuilder/ApkFileSaver.kt
 
       - name: Install Android build tools
         run: |
@@ -113,26 +117,26 @@ jobs:
           test -s webview_shell.apk
           unzip -tqq webview_shell.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='530' versionName='5.3.0'"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.locon007.apkbuilder' versionCode='531' versionName='5.3.1'"
           grep -F 'ProjectArchive.prepare' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'enabled = !busy && existingInfo != null && project != null' source/app/src/main/java/com/webtoapp/ui/wizard/UpdateExistingApkDialog.kt
           grep -F 'ApkFileSaver.copyApk(apkFile, it)' source/app/src/main/java/com/webtoapp/ui/screens/BuildApkScreen.kt
           grep -F 'failures="0"' source/app/build/test-results/testStandardDebugUnitTest/TEST-com.webtoapp.core.apkbuilder.ApkFileSaverTest.xml
-          cp "$APK" APK-Builder-5.3.0-debug.apk
-          sha256sum APK-Builder-5.3.0-debug.apk > APK-Builder-5.3.0-debug.apk.sha256
+          cp "$APK" APK-Builder-5.3.1-debug.apk
+          sha256sum APK-Builder-5.3.1-debug.apk > APK-Builder-5.3.1-debug.apk.sha256
           mkdir -p signing-tools
           cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" signing-tools/apksigner.jar
           printf 'source_branch=%s\nsource_commit=%s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" > BUILD_EVIDENCE.txt
-          printf 'toolbar_regression_fix=PASS\nsave_apk_action=PASS\nupdate_source_selection_fix=PASS\ntwo_step_update_flow=PASS\nhardened_project_archive=PASS\n' >> BUILD_EVIDENCE.txt
-          cat APK-Builder-5.3.0-debug.apk.sha256 >> BUILD_EVIDENCE.txt
+          printf 'toolbar_regression_fix=PASS\nsave_apk_action=PASS\nupdate_source_selection_fix=PASS\ntwo_step_update_flow=PASS\nhardened_project_archive=PASS\ngenerated_app_name_fix=PASS\napk_filename_matches_app_name=PASS\n' >> BUILD_EVIDENCE.txt
+          cat APK-Builder-5.3.1-debug.apk.sha256 >> BUILD_EVIDENCE.txt
 
       - name: Upload one-time build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: APK-Builder-5.3.0-audited-host
+          name: APK-Builder-5.3.1-audited-host
           path: |
-            APK-Builder-5.3.0-debug.apk
-            APK-Builder-5.3.0-debug.apk.sha256
+            APK-Builder-5.3.1-debug.apk
+            APK-Builder-5.3.1-debug.apk.sha256
             BUILD_EVIDENCE.txt
             signing-tools/apksigner.jar
           if-no-files-found: error
