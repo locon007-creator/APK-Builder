@@ -1,4 +1,4 @@
-APK Builder 5.2.0 safe two-step update flow
-requested=2026-08-28
-attempt=13
-purpose=GREEN regression plus audited Android build after normalizing generated Kotlin source
+APK Builder 5.3.0 clean splash and navigation bar option
+requested=2026-10-01
+attempt=14
+purpose=2-second splash without countdown/skip plus selectable Android navigation bar visibility
