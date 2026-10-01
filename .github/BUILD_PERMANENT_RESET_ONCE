@@ -1,4 +1,4 @@
-APK Builder 5.3.0 clean splash and navigation bar option
+APK Builder 5.3.1 generated app-name fix
 requested=2026-10-01
-attempt=16
-purpose=rerun after fixing sdkmanager PATH on current GitHub runner
+attempt=17
+purpose=ensure generated app label and APK filename use the selected app name instead of APK Builder
