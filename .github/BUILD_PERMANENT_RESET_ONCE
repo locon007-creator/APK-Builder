@@ -1,4 +1,4 @@
-APK Builder 5.3.1 generated app-name fix
+APK Builder 5.3.2 text-scale fidelity fix
 requested=2026-10-01
-attempt=17
-purpose=ensure generated app label and APK filename use the selected app name instead of APK Builder
+attempt=18
+purpose=preserve authored HTML text size in generated APKs while keeping 5.3.1 naming fix
