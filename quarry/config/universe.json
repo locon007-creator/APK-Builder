@@ -1,0 +1,31 @@
+{
+  "_comment": "Tracked universe for live SEC ingestion. CIKs and CUSIPs should be verified against EDGAR before production use; manager and issuer names are refreshed from SEC submissions on every ingest, which exposes any mismatched CIK. CUSIP is the historical identity key for 13F securities — tickers are display-only.",
+  "lookbackDays": 120,
+  "periodsBack": 4,
+  "managers": [
+    { "cik": "1067983", "name": "Berkshire Hathaway Inc" },
+    { "cik": "1336528", "name": "Pershing Square Capital Management, L.P." },
+    { "cik": "1649339", "name": "Scion Asset Management, LLC" },
+    { "cik": "1350694", "name": "Bridgewater Associates, LP" },
+    { "cik": "1656456", "name": "Appaloosa LP" },
+    { "cik": "1061768", "name": "Baupost Group LLC" },
+    { "cik": "1040273", "name": "Third Point LLC" },
+    { "cik": "1536411", "name": "Duquesne Family Office LLC" },
+    { "cik": "1079114", "name": "Greenlight Capital Inc" },
+    { "cik": "1167483", "name": "Tiger Global Management LLC" }
+  ],
+  "issuers": [
+    { "cik": "320193", "ticker": "AAPL", "name": "Apple Inc.", "sector": "Technology", "cusips": ["037833100"] },
+    { "cik": "789019", "ticker": "MSFT", "name": "Microsoft Corp", "sector": "Technology", "cusips": ["594918104"] },
+    { "cik": "1018724", "ticker": "AMZN", "name": "Amazon.com, Inc.", "sector": "Consumer Discretionary", "cusips": ["023135106"] },
+    { "cik": "1652044", "ticker": "GOOGL", "name": "Alphabet Inc.", "sector": "Communication Services", "cusips": ["02079K305", "02079K107"] },
+    { "cik": "1326801", "ticker": "META", "name": "Meta Platforms, Inc.", "sector": "Communication Services", "cusips": ["30303M102"] },
+    { "cik": "1045810", "ticker": "NVDA", "name": "NVIDIA Corp", "sector": "Technology", "cusips": ["67066G104"] },
+    { "cik": "70858", "ticker": "BAC", "name": "Bank of America Corp", "sector": "Financials", "cusips": ["060505104"] },
+    { "cik": "21344", "ticker": "KO", "name": "Coca-Cola Co", "sector": "Consumer Staples", "cusips": ["191216100"] },
+    { "cik": "93410", "ticker": "CVX", "name": "Chevron Corp", "sector": "Energy", "cusips": ["166764100"] },
+    { "cik": "797468", "ticker": "OXY", "name": "Occidental Petroleum Corp", "sector": "Energy", "cusips": ["674599105"] },
+    { "cik": "4962", "ticker": "AXP", "name": "American Express Co", "sector": "Financials", "cusips": ["025816109"] },
+    { "cik": "19617", "ticker": "JPM", "name": "JPMorgan Chase & Co", "sector": "Financials", "cusips": ["46625H100"] }
+  ]
+}

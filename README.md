@@ -40,3 +40,9 @@ The first implementation milestone is the Template Engine V1 contract in `docs/T
 The release-quality scenarios are defined in `docs/ACCEPTANCE_CONTRACT.md`. The template metadata format is defined by `docs/template-contract.schema.json`.
 
 GitHub is source storage only. It must not automatically build, retry, or send CI failure email traffic.
+
+---
+
+## Also in this repository: Quarry
+
+`quarry/` contains **Quarry**, a separate mobile-first investing research web app built on SEC EDGAR data (13F, Form 4, 8-K, 13D/13G). It is independent of the APK Builder work above. See [`quarry/README.md`](quarry/README.md).
