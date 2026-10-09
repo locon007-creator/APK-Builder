@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApi } from '../api.ts';
+import { IS_PREVIEW, useApi } from '../api.ts';
 import { useSettings, type Theme } from '../settings.tsx';
 import type { DatasetInfo } from '../../shared/types.ts';
 import { ErrorState, Loading, Segmented } from '../components/ui.tsx';
@@ -37,12 +37,12 @@ export function SettingsPage() {
       <section className="card card-pad stack" aria-labelledby="hist-h" style={{ marginTop: 12 }}>
         <h2 id="hist-h">Historical view</h2>
         <p className="subtle">See every screen as it would have looked on a past date. Only filings accepted by EDGAR and prices observed on or before the cutoff are used; later amendments are not applied retroactively.</p>
-        <form className="toolbar" style={{ marginBottom: 0 }} onSubmit={(e) => { e.preventDefault(); setAsOf(draft || null); }}>
+        {IS_PREVIEW ? <div className="banner info" style={{ marginBottom: 0 }}><Icon name="info" size={18} /><span>The historical view needs the Quarry server, because it recomputes every screen from the database. This browser preview shows the latest snapshot only.</span></div> : <form className="toolbar" style={{ marginBottom: 0 }} onSubmit={(e) => { e.preventDefault(); setAsOf(draft || null); }}>
           <label htmlFor="asof" className="sr-only">Cutoff date</label>
           <input id="asof" type="date" className="input grow" max={today} value={draft} onChange={(e) => setDraft(e.target.value)} />
           <button type="submit" className="btn primary small" disabled={!draft || draft === asOf}>Apply</button>
           {asOf && <button type="button" className="btn small" onClick={() => { setDraft(''); setAsOf(null); }}>Return to now</button>}
-        </form>
+        </form>}
         {asOf && <p className="subtle">Active cutoff: end of {date(asOf)} (UTC).</p>}
       </section>
 

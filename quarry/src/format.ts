@@ -40,7 +40,11 @@ export function dateTime(iso: string | null | undefined): string {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
 }
 
-export function ago(iso: string | null | undefined, now = Date.now()): string {
+let referenceNow: number | null = null;
+/** The preview build pins "now" to when its data snapshot was taken, so relative times stay truthful. */
+export function setReferenceNow(iso: string | null) { referenceNow = iso ? Date.parse(iso) : null; }
+
+export function ago(iso: string | null | undefined, now = referenceNow ?? Date.now()): string {
   if (!iso) return '—';
   const s = (now - new Date(iso).getTime()) / 1000;
   if (s < 0) return 'upcoming';

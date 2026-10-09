@@ -18,7 +18,8 @@
     "alerts:evaluate": "tsx server/cli/evaluate-alerts.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:e2e": "node e2e/run.mjs"
+    "test:e2e": "node e2e/run.mjs",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",

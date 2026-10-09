@@ -151,8 +151,9 @@ function Rules() {
       toast(id ? 'Rule updated' : 'Rule created — matching alerts added to your inbox');
     } catch (e) { toast((e as Error).message); }
   };
+  const [confirming, setConfirming] = useState<number | null>(null);
   const remove = async (r: AlertRule) => {
-    if (!window.confirm(`Delete the rule “${r.name}” and its alerts?`)) return;
+    setConfirming(null);
     await api.del(`/api/alerts/rules/${r.id}`);
     api.invalidate('/api/alerts'); rules.reload();
     toast('Rule deleted');
@@ -171,15 +172,24 @@ function Rules() {
       ) : (
         <div className="card"><ul className="list">
           {rules.data.rules.map((r) => (
-            <li key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 4, paddingRight: 6 }}>
-              <div className="row-link" style={{ flex: 1 }}>
+            <li key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 4, paddingRight: 6, flexWrap: 'wrap' }}>
+              <div className="row-link" style={{ flex: '1 1 200px' }}>
                 <span className="grow">
                   <span className="title">{r.name}</span>
                   <span className="meta"><span>{RULE_LABELS[r.type]}</span><span>{targetLabel(r)}</span>{r.threshold != null && <span>threshold {r.type === 'share_change' ? `${Math.round(r.threshold * 100)}%` : `$${r.threshold.toLocaleString('en-US')}`}</span>}{!r.enabled && <span className="badge unavailable">Paused</span>}</span>
                 </span>
               </div>
-              <button className="icon-btn" onClick={() => setEditing(r)} aria-label={`Edit ${r.name}`}><Icon name="edit" size={18} /></button>
-              <button className="icon-btn" onClick={() => remove(r)} aria-label={`Delete ${r.name}`}><Icon name="trash" size={18} /></button>
+              {confirming === r.id ? (
+                <span style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', padding: '0 0 12px 14px' }} role="group" aria-label={`Confirm deleting ${r.name}`}>
+                  <button className="btn small danger" onClick={() => remove(r)}>Delete rule and alerts</button>
+                  <button className="btn small ghost" onClick={() => setConfirming(null)}>Cancel</button>
+                </span>
+              ) : (
+                <>
+                  <button className="icon-btn" onClick={() => setEditing(r)} aria-label={`Edit ${r.name}`}><Icon name="edit" size={18} /></button>
+                  <button className="icon-btn" onClick={() => setConfirming(r.id)} aria-label={`Delete ${r.name}`}><Icon name="trash" size={18} /></button>
+                </>
+              )}
             </li>
           ))}
         </ul></div>

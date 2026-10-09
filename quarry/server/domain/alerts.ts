@@ -54,9 +54,11 @@ export function toRule(r: RuleRow): AlertRule {
   };
 }
 
-interface Candidate {
+export interface Candidate {
   dedupeKey: string; title: string; body: string; triggerEvent: string; source: string; accession: string | null;
   sourceUrl: string | null; filingAcceptedAt: string | null; limitations: string[]; origin: DataOrigin;
+  /** Facts the match was based on (used by the static preview to re-apply thresholds). */
+  meta?: { kind?: string; shareChangePct?: number | null; value?: number | null; items?: string[]; relevance?: number };
 }
 
 /** Produce the alert candidates a rule matches as of `now` (pure: no writes). */
@@ -105,6 +107,7 @@ export function matchRule(db: DB, rule: AlertRule, now: string): Candidate[] {
             triggerEvent: rule.type === 'new_position' ? 'New reported position' : `Share-count change ≥ ${(threshold * 100).toFixed(0)}%`,
             source: '13F-HR', accession: c.filingAccession, sourceUrl: null, filingAcceptedAt: c.filingAcceptedAt,
             limitations: ['13F reflects quarter-end holdings; trade dates and prices are not disclosed.'], origin: c.origin,
+            meta: { kind: c.kind, shareChangePct: c.shareChangePct },
           });
         }
       }
@@ -121,6 +124,7 @@ export function matchRule(db: DB, rule: AlertRule, now: string): Candidate[] {
         body: `${t.ownerName} (${t.ownerRole}) bought ${t.shares.toLocaleString('en-US')} shares at $${t.price?.toFixed(2)} on ${t.transactionDate}.`,
         triggerEvent: 'Form 4 code P (open-market purchase)', source: 'Form 4', accession: t.accession, sourceUrl: t.sourceUrl,
         filingAcceptedAt: t.acceptedAt, limitations: ['Insider purchases are not necessarily predictive.'], origin: t.origin,
+        meta: { value: t.value },
       });
     }
   }
@@ -141,6 +145,7 @@ export function matchRule(db: DB, rule: AlertRule, now: string): Candidate[] {
         triggerEvent: rule.type === 'corporate_event' ? `8-K items ${e.items.map((i) => i.code).join(', ')}` : `${e.formType} filed`,
         source: e.formType, accession: e.accession, sourceUrl: e.sourceUrl, filingAcceptedAt: e.acceptedAt,
         limitations: rule.type === 'ownership_disclosure' ? ['Schedule 13D/13G stakes are as of the event date, not necessarily current.'] : [], origin: e.origin,
+        meta: { items: e.items.map((i) => i.code), relevance: eventRelevance(e.items.map((i) => i.code)) },
       });
     }
   }

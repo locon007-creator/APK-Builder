@@ -167,6 +167,7 @@ try {
       await shot('alerts');
       await page.getByRole('tab', { name: 'Alert rules' }).click();
       await page.getByRole('button', { name: 'Delete IBBK insider buys' }).click();
+      await page.getByRole('button', { name: 'Delete rule and alerts' }).click();
       await page.getByText('No alert rules').waitFor();
     });
 

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { readLocal, writeLocal } from './storage.ts';
-import { api } from './api.ts';
+import { api, IS_PREVIEW } from './api.ts';
 
 export type Theme = 'system' | 'light' | 'dark';
 
@@ -16,7 +16,7 @@ const Ctx = createContext<Settings | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => (readLocal('quarry.theme') as Theme) || 'system');
-  const [asOf, setAsOfState] = useState<string | null>(() => readLocal('quarry.asOf'));
+  const [asOf, setAsOfState] = useState<string | null>(() => (IS_PREVIEW ? null : readLocal('quarry.asOf')));
 
   useEffect(() => {
     const root = document.documentElement;

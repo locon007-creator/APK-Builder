@@ -7,6 +7,7 @@ import { type DB, all, getMeta, one } from './db/index.ts';
 import type { AppConfig } from './config.ts';
 import type { MarketDataProvider } from './market/provider.ts';
 import type { DatasetInfo, RadarCategory, WatchItem } from '../shared/types.ts';
+import { filterRadar, pageExplore } from '../shared/views.ts';
 import { resolveAsOf, addDays } from './domain/asof.ts';
 import { buildRadar, CATEGORY_META } from './domain/radar.ts';
 import { explore, PRESETS, type Preset } from './domain/explore.ts';
@@ -170,23 +171,7 @@ export function createApp(deps: AppDeps) {
     const watch = watchSets(req.workspaceId);
     const radar = await buildRadar({ db, asOf: req.asOf, now: req.now, market, watchIssuers: watch.stocks });
     const sectors = [...new Set(radar.candidates.map((c) => c.sector).filter(Boolean))].sort() as string[];
-    const cats = q.category ? new Set(q.category.split(',')) : null;
-    const insiderIssuers = new Set(radar.candidates.filter((c) => c.category === 'insider_buying').map((c) => c.issuerCik));
-    const instIssuers = new Set(radar.candidates.filter((c) => c.mode === 'positioning' && c.category !== 'institutional_reduction').map((c) => c.issuerCik));
-    const filtered = radar.candidates.filter((c) =>
-      (!q.mode || q.mode === 'all' || c.mode === q.mode) &&
-      (!cats || cats.has(c.category)) &&
-      (!q.sector || c.sector === q.sector) &&
-      (q.minCap == null || (c.marketCap != null && c.marketCap >= q.minCap)) &&
-      (q.maxCap == null || (c.marketCap != null && c.marketCap <= q.maxCap)) &&
-      (!q.form || c.formTypes.some((f) => f.replace('/A', '') === q.form)) &&
-      (!q.filedFrom || c.latestAcceptedAt.slice(0, 10) >= q.filedFrom) &&
-      (!q.filedTo || c.latestAcceptedAt.slice(0, 10) <= q.filedTo) &&
-      (!q.period || c.periodOfReport === q.period) &&
-      (q.institutional !== '1' || instIssuers.has(c.issuerCik)) &&
-      (q.insider !== '1' || insiderIssuers.has(c.issuerCik)) &&
-      (q.watchlist !== '1' || c.onWatchlist || watch.categories.has(c.category)) &&
-      (q.market !== '1' || c.hasMarketConfirmation));
+    const filtered = filterRadar(radar.candidates, q, watch.categories);
     res.json({ ...radar, candidates: filtered, total: radar.candidates.length, sectors, watchedCategories: [...watch.categories] });
   }));
 
@@ -201,16 +186,7 @@ export function createApp(deps: AppDeps) {
       pageSize: z.coerce.number().int().min(5).max(100).default(20),
     }).parse(req.query);
     const { rows, period } = explore(db, q.preset, req.asOf, watchSets(req.workspaceId));
-    const term = q.q?.trim().toLowerCase();
-    const filtered = rows.filter((r) => (!term || `${r.title} ${r.subtitle}`.toLowerCase().includes(term)) && (!q.sector || r.sector === q.sector));
-    filtered.sort((a, b) => q.sort === 'newest' ? b.date.localeCompare(a.date) : q.sort === 'name' ? a.title.localeCompare(b.title) : b.sortValue - a.sortValue || a.id.localeCompare(b.id));
-    const start = (q.page - 1) * q.pageSize;
-    res.json({
-      preset: q.preset, rule: PRESETS[q.preset].rule, label: PRESETS[q.preset].label, period,
-      total: filtered.length, page: q.page, pageSize: q.pageSize, pages: Math.max(1, Math.ceil(filtered.length / q.pageSize)),
-      rows: filtered.slice(start, start + q.pageSize),
-      sectors: [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort(),
-    });
+    res.json({ preset: q.preset, rule: PRESETS[q.preset].rule, label: PRESETS[q.preset].label, period, ...pageExplore(rows, q) });
   });
 
   app.get('/api/search', (req, res) => {

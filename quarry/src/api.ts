@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { handle as previewHandle, MockError } from './static/mock.ts';
+
+/** True in the self-contained browser preview build (no server). */
+export const IS_PREVIEW = import.meta.env.VITE_STATIC === '1';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public offline = false) { super(message); }
@@ -15,6 +19,10 @@ function withAsOf(path: string): string {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (IS_PREVIEW) {
+    try { return (await previewHandle(method, path, body)) as T; }
+    catch (e) { throw e instanceof MockError ? new ApiError(e.status, e.message) : new ApiError(500, (e as Error).message); }
+  }
   let res: Response;
   try {
     res = await fetch(withAsOf(path), {

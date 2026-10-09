@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { Icon, type IconName } from './icons.tsx';
-import { useApi, useOnline } from './api.ts';
+import { IS_PREVIEW, useApi, useOnline } from './api.ts';
 import { useSettings } from './settings.tsx';
 import { ToastHost } from './components/ui.tsx';
 import { date } from './format.ts';
@@ -99,6 +99,12 @@ export function App() {
           <div className="banner demo" role="note">
             <Icon name="flask" size={18} />
             <span><strong>Demo dataset.</strong> Every company, investor, person, filing and price shown is fictional and generated for demonstration{status.data.demoAnchor ? ` on ${date(status.data.demoAnchor)}` : ''}. Connect SEC EDGAR ingestion to see real disclosures.</span>
+          </div>
+        )}
+        {IS_PREVIEW && loc.pathname === '/' && (
+          <div className="banner info" role="note">
+            <Icon name="info" size={18} />
+            <span><strong>Browser preview.</strong> This copy runs entirely on your device from a snapshot of the demo server. Your watchlist and alert rules are saved in this browser only.</span>
           </div>
         )}
         {asOf && (
