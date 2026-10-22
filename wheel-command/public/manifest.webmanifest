@@ -1,0 +1,9 @@
+{
+  "name": "Wheel Command",
+  "short_name": "Wheel",
+  "start_url": "/#/scanner",
+  "display": "standalone",
+  "background_color": "#0a0c0f",
+  "theme_color": "#0a0c0f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
