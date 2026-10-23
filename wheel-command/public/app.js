@@ -21,6 +21,8 @@ const fdate = (iso, withYear) => {
 const daysTo = (iso) => Math.round((new Date(iso + 'T12:00:00') - new Date(S.today() + 'T12:00:00')) / 86400000);
 const scoreColor = (s) => (s >= 75 ? 'var(--green)' : s >= 62 ? 'var(--blue)' : s >= 48 ? 'var(--amber)' : 'var(--red)');
 const verdictClass = (v) => ({ 'Strong Candidate': 'strong', Favorable: 'favorable', Watch: 'watch', Avoid: 'avoid' })[v] || 'unverified';
+// Set only by the standalone preview build, which runs on simulated data.
+const PREVIEW = globalThis.WHEEL_PREVIEW === true;
 const STRAT = { csp: 'Cash-Secured Put', cc: 'Covered Call', both: 'Both' };
 const STRAT_SHORT = { csp: 'CSP', cc: 'CC' };
 
@@ -178,7 +180,7 @@ function renderChrome() {
   $('#nav').innerHTML = links;
   $('#tabbar').innerHTML = ROUTES.map(([k, l]) => `<a href="#/${k}" class="${r === k ? 'active' : ''}" ${r === k ? 'aria-current="page"' : ''}>${ICON[k]}<span>${l === 'Opportunities' ? 'Ideas' : l}</span></a>`).join('');
   const h = ui.health;
-  const st = !h ? ['', 'Checking data…'] : h.error ? ['bad', 'Data offline'] : !h.configured ? ['warn', 'No data key'] : h.entitlements?.options === 'ok' ? ['ok', 'Live data'] : ['warn', 'Limited data'];
+  const st = PREVIEW ? ['warn', 'Preview data'] : !h ? ['', 'Checking data…'] : h.error ? ['bad', 'Data offline'] : !h.configured ? ['warn', 'No data key'] : h.entitlements?.options === 'ok' ? ['ok', 'Live data'] : ['warn', 'Limited data'];
   $('#status').innerHTML = `<a href="#/settings" class="row muted" style="gap:7px"><span class="dot ${st[0]}"></span><span>${st[1]}</span></a>`;
 }
 
@@ -217,6 +219,7 @@ function viewScanner() {
   <div class="eyebrow">Step 1 · Select</div>
   <h1 class="title">Find income.</h1>
   <p class="lede">Pick a market and strategy. One scan ranks the best risk-adjusted Wheel trades.</p>
+  ${PREVIEW ? `<div class="banner"><div><b>Preview mode.</b> Prices, chains and scores below come from simulated market data for demonstration only. Deploy with a Massive API key for real quotes.</div></div>` : ''}
   ${keyMissing ? `<div class="banner"><div><b>Market data not connected.</b> Add <span class="mono">MASSIVE_API_KEY</span> to the Vercel project's environment variables, then redeploy. Scans need real quotes — nothing is simulated.</div></div>` : ''}
   <div class="card regime" style="margin-bottom:18px">
     ${g ? `<div><div class="eyebrow">Market · SPY</div><div class="row" style="gap:10px;margin-top:4px"><span class="big num">${px(g.spy?.close)}</span><span class="num ${cls(g.spy?.change1d)}">${spct(g.spy?.change1d, 2)}</span></div></div><div class="spark">${spark(g.spy?.spark, { w: 300, h: 42 })}</div><div style="text-align:right"><span class="pill ${g.label === 'Risk-on' ? 'strong' : g.label === 'Risk-off' ? 'avoid' : 'watch'}">${esc(g.label)}</span><div class="note" style="margin-top:6px;max-width:190px">${esc(g.detail)}</div></div>` : ui.regimeErr ? `<div class="muted" style="font-size:13.5px">Market regime unavailable — ${esc(ui.regimeErr)}</div>` : `<div class="skeleton" style="height:42px;flex:1"></div>`}

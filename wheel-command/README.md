@@ -73,3 +73,7 @@ The tests use `tests/mock-upstream.js`, a synthetic, test-only stand-in for the 
 Wheel data (trades, journal, settings and the last scan) is stored in the browser's localStorage. Use **Settings → Export backup** to keep a copy or move it to another device.
 
 > Analytics only, not investment advice. Options carry substantial risk.
+
+## Standalone preview
+
+`npm run preview` builds `wheel-command-preview.html`, a single self-contained file you can open directly in a browser (no server). It runs the real UI, scoring engine and API handlers in-browser on **simulated** market data from `tests/mock-upstream.js`, and is labelled "Preview data" throughout. It is not part of the Vercel deployment.

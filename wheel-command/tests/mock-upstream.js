@@ -23,11 +23,13 @@ const EARNINGS_SOON = new Set(['AAPL', 'NKE']);
 function bars(sym) {
   const r = rng(sym);
   let p = 50 + r() * 400;
-  const drift = DOWNTREND.has(sym) ? -0.0012 : 0.0006 + r() * 0.0006;
+  const kind = r();
+  const drift = DOWNTREND.has(sym) || kind < 0.22 ? -0.0011 : kind < 0.4 ? 0.0001 : 0.0005 + r() * 0.0006;
+  const noise = 0.018 + r() * 0.03;
   const out = [];
   const start = Date.now() - 400 * 86400000;
   for (let i = 0; i < 275; i++) {
-    p *= Math.exp(drift + (r() - 0.5) * 0.03);
+    p *= Math.exp(drift + (r() - 0.5) * noise * 2);
     out.push({ t: start + i * 1.45 * 86400000, o: p, h: p * 1.01, l: p * 0.99, c: Math.round(p * 100) / 100, v: 1e6 + r() * 5e6 });
   }
   return out;
@@ -59,7 +61,7 @@ function chain(sym, q) {
       const iv = baseIv * (1 + (type === 'put' ? 0.25 : 0.05) * Math.max(0, (S - k) / S) * 4);
       const { p, delta } = bsPrice(S, k, T, iv, type);
       if (p < 0.05) continue;
-      const spread = Math.max(0.02, p * (0.02 + r() * 0.05));
+      const spread = Math.max(0.02, p * (0.015 + r() * (sym.charCodeAt(0) % 3 === 0 ? 0.16 : 0.06)));
       const oi = Math.round(50 + r() * 6000 * Math.exp(-Math.abs(S - k) / S / 0.08));
       results.push({
         details: { contract_type: type, exercise_style: 'american', expiration_date: exp, shares_per_contract: 100, strike_price: k, ticker: `O:${sym}${exp}${type[0]}${k}` },
